@@ -47,6 +47,7 @@ const mockActivities: Activity[] = [
 
 export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
   const [activities, setActivities] = useState(mockActivities.filter(a => a.studentId === student.id));
+  const initialActivitiesSumRef = useRef<number>(activities.reduce((sum, a) => sum + a.hours, 0));
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [deleteActivityId, setDeleteActivityId] = useState<string | null>(null);
@@ -56,7 +57,12 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const totalHours = 150;
-  const progressPercentage = Math.min((student.totalHours / totalHours) * 100, 100);
+
+  // displayedTotalHours = base student.totalHours + (current activities sum - initial activities sum)
+  // This way, the UI reflects additions/edits/deletes done while the profile is open
+  const currentActivitiesSum = activities.reduce((sum, a) => sum + a.hours, 0);
+  const displayedTotalHours = Math.max(0, student.totalHours + (currentActivitiesSum - initialActivitiesSumRef.current));
+  const progressPercentage = Math.min((displayedTotalHours / totalHours) * 100, 100);
 
   // Calculate hours by type
   const hoursByType = activityTypes.map(type => {
@@ -167,7 +173,7 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
           <div className="flex items-center justify-between mb-2">
             <span className="text-gray-700">Progresso Total</span>
             <span className="text-gray-900">
-              {student.totalHours}h / {totalHours}h ({progressPercentage.toFixed(0)}%)
+              {displayedTotalHours}h / {totalHours}h ({progressPercentage.toFixed(0)}%)
             </span>
           </div>
           <Progress value={progressPercentage} className="h-3" />
