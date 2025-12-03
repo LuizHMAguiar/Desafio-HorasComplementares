@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { ActivityList } from '../App';
+import { ActivityList } from '../types';
 import { Plus, Search, Edit, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 

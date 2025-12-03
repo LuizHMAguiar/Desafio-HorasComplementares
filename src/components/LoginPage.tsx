@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Alert, AlertDescription } from './ui/alert';
-import { User } from '../App';
+import { User } from '../types';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;

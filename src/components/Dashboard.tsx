@@ -1,6 +1,6 @@
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { User, ActivityList } from '../App';
+import { User, ActivityList } from '../types';
 import { FileText, Plus, Users, Clock } from 'lucide-react';
 
 interface DashboardProps {

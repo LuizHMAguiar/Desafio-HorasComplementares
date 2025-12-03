@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { ActivityList, Student } from '../App';
+import { ActivityList, Student } from '../types';
 import { Plus, Search, Upload, Download, User, FileSpreadsheet, FileText, X } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';

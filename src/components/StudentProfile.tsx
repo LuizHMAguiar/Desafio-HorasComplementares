@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Progress } from './ui/progress';
-import { Student, Activity } from '../App';
+import { Student, Activity } from '../types';
 import { Plus, FileText, Edit, Trash2, Download, Upload, X } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';

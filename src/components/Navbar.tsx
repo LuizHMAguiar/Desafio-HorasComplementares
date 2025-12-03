@@ -1,5 +1,5 @@
 import { Button } from './ui/button';
-import { User } from '../App';
+import { User } from '../types';
 import { LogOut, Home, List, Users } from 'lucide-react';
 
 interface NavbarProps {

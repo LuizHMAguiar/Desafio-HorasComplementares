@@ -1,6 +1,6 @@
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { ActivityList } from '../App';
+import { ActivityList } from '../types';
 import { Printer, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
