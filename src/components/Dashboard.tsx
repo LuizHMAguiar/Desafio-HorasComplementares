@@ -1,18 +1,18 @@
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { User, ActivityList } from '../types';
-import { FileText, Plus, Users, Clock } from 'lucide-react';
+import { User, StudentList } from '../types';
+import { FileText, Plus, Users,} from 'lucide-react';
 
 interface DashboardProps {
   user: User;
-  onNavigate: (page: 'lists' | 'students', list?: ActivityList) => void;
+  onNavigate: (page: 'lists' | 'students', list?: StudentList) => void;
 }
 
 // Mock data
-const mockLists: ActivityList[] = [
-  { id: '1', title: 'Turma 2024.1 - Engenharia', totalHours: 150, maxHoursPerType: 50, studentCount: 45, createdAt: '2024-01-15' },
-  { id: '2', title: 'Turma 2024.1 - Administração', totalHours: 150, maxHoursPerType: 50, studentCount: 38, createdAt: '2024-01-20' },
-  { id: '3', title: 'Turma 2023.2 - Direito', totalHours: 150, maxHoursPerType: 50, studentCount: 52, createdAt: '2023-08-10' },
+const mockLists: StudentList[] = [
+  { id: 1, title: 'Turma 2024.1 - Engenharia', totalHours: 150, maxHoursPerType: 50, studentCount: 45, createdAt: '2024-01-15' },
+  { id: 2, title: 'Turma 2024.1 - Administração', totalHours: 150, maxHoursPerType: 50, studentCount: 38, createdAt: '2024-01-20' },
+  { id: 3, title: 'Turma 2023.2 - Direito', totalHours: 150, maxHoursPerType: 50, studentCount: 52, createdAt: '2023-08-10' },
 ];
 
 export function Dashboard({ user, onNavigate }: DashboardProps) {

@@ -39,10 +39,10 @@ const activityTypes = [
 ];
 
 const mockActivities: Activity[] = [
-  { id: '1', studentId: '1', type: 'Eventos', hours: 32, date: '2024-03-15', registeredBy: 'Maria Silva', document: 'certificado.pdf' },
-  { id: '2', studentId: '1', type: 'Organização', hours: 10, date: '2024-04-20', registeredBy: 'Maria Silva', document: 'declaracao.pdf' },
-  { id: '3', studentId: '1', type: 'Pesquisa', hours: 20, date: '2024-05-10', registeredBy: 'João Santos', document: 'relatorio.pdf' },
-  { id: '4', studentId: '1', type: 'Extensão', hours: 16, date: '2024-06-05', registeredBy: 'Maria Silva', document: 'comprovante.pdf' },
+  { id: 1, studentId: 1, type: 'Eventos', hours: 32, date: '2024-03-15', registeredBy: 'Maria Silva', document: 'certificado.pdf' },
+  { id: 2, studentId: 1, type: 'Organização', hours: 10, date: '2024-04-20', registeredBy: 'Maria Silva', document: 'declaracao.pdf' },
+  { id: 3, studentId: 1, type: 'Pesquisa', hours: 20, date: '2024-05-10', registeredBy: 'João Santos', document: 'relatorio.pdf' },
+  { id: 4, studentId: 1, type: 'Extensão', hours: 16, date: '2024-06-05', registeredBy: 'Maria Silva', document: 'comprovante.pdf' },
 ];
 
 export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
@@ -50,7 +50,7 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
   const initialActivitiesSumRef = useRef<number>(activities.reduce((sum, a) => sum + a.hours, 0));
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
-  const [deleteActivityId, setDeleteActivityId] = useState<string | null>(null);
+  const [deleteActivityId, setDeleteActivityId] = useState<number | null>(null);
   const [typeFilter, setTypeFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number } | null>(null);
@@ -91,7 +91,7 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
     }
     
     const newActivity: Activity = {
-      id: editingActivity?.id || String(activities.length + 1),
+      id: editingActivity?.id || Date.now(), // Using timestamp for a unique ID
       studentId: student.id,
       type: formData.get('type') as string,
       hours: Number(formData.get('hours')),

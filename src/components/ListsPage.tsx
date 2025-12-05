@@ -4,26 +4,26 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { ActivityList } from '../types';
+import { StudentList } from '../types';
 import { Plus, Search, Edit, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ListsPageProps {
-  onNavigate: (page: 'students', list: ActivityList) => void;
+  onNavigate: (page: 'students', list: StudentList) => void;
 }
 
-const mockLists: ActivityList[] = [
-  { id: '1', title: 'Turma 2024.1 - Engenharia', totalHours: 150, maxHoursPerType: 50, studentCount: 45, createdAt: '2024-01-15' },
-  { id: '2', title: 'Turma 2024.1 - Administração', totalHours: 150, maxHoursPerType: 50, studentCount: 38, createdAt: '2024-01-20' },
-  { id: '3', title: 'Turma 2023.2 - Direito', totalHours: 150, maxHoursPerType: 50, studentCount: 52, createdAt: '2023-08-10' },
-  { id: '4', title: 'Turma 2024.2 - Medicina', totalHours: 200, maxHoursPerType: 60, studentCount: 30, createdAt: '2024-07-01' },
+const mockLists: StudentList[] = [
+  { id: 1, title: 'Turma 2024.1 - Engenharia', totalHours: 150, maxHoursPerType: 50, studentCount: 45, createdAt: '2024-01-15' },
+  { id: 2, title: 'Turma 2024.1 - Administração', totalHours: 150, maxHoursPerType: 50, studentCount: 38, createdAt: '2024-01-20' },
+  { id: 3, title: 'Turma 2023.2 - Direito', totalHours: 150, maxHoursPerType: 50, studentCount: 52, createdAt: '2023-08-10' },
+  { id: 4, title: 'Turma 2024.2 - Medicina', totalHours: 200, maxHoursPerType: 60, studentCount: 30, createdAt: '2024-07-01' },
 ];
 
 export function ListsPage({ onNavigate }: ListsPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [lists, setLists] = useState(mockLists);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingList, setEditingList] = useState<ActivityList | null>(null);
+  const [editingList, setEditingList] = useState<StudentList | null>(null);
 
   const filteredLists = lists.filter(list =>
     list.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -33,8 +33,8 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const newList: ActivityList = {
-      id: editingList?.id || String(lists.length + 1),
+    const newList: StudentList = {
+      id: editingList?.id || Date.now(), // Using timestamp for a unique ID
       title: formData.get('title') as string,
       totalHours: Number(formData.get('totalHours')),
       maxHoursPerType: Number(formData.get('maxHoursPerType')),

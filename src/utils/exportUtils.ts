@@ -129,11 +129,34 @@ export function downloadReportCSV(reportData: ReportData[], listTitle: string) {
  * Download report as PDF (using browser print to PDF)
  */
 export function downloadPDF(elementId: string, filename: string) {
-  // Open print dialog (user can save as PDF)
-  window.print();
-  
-  // Note: For true PDF generation, you would need a library like jsPDF or html2pdf
-  // This is a simple solution that relies on the browser's print-to-PDF functionality
+  try {
+    const element = elementId ? document.getElementById(elementId) : document.body;
+    const title = filename || document.title || 'relatorio';
+
+    // Open a new window and write the element's HTML to it, then print
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      // Fallback to default print if window couldn't be opened
+      console.warn('Não foi possível abrir a janela de impressão. Usando print padrão.');
+      window.print();
+      return;
+    }
+
+    printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title></head><body>`);
+    printWindow.document.write(element ? element.innerHTML : document.body.innerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    // Delay to ensure content is rendered
+    setTimeout(() => {
+      printWindow.print();
+      // Fecha a janela após impressão (se permitido pelo navegador)
+      setTimeout(() => printWindow.close(), 500);
+    }, 250);
+  } catch (error) {
+    console.error('Erro ao gerar PDF:', error);
+    window.print();
+  }
 }
 
 /**
@@ -310,7 +333,7 @@ export function readCSVFile(file: File): Promise<Record<string, string>[]> {
  */
 export async function importStudentsFromCSV(
   file: File,
-  listId: string,
+  listId: number,
   setStudents: (updater: (prev: any[]) => any[]) => void
 ): Promise<number> {
   try {

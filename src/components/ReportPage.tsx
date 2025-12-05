@@ -1,11 +1,11 @@
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { ActivityList } from '../types';
+import { StudentList } from '../types';
 import { Printer, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ReportPageProps {
-  list: ActivityList;
+  list: StudentList;
 }
 
 const mockReportData = [

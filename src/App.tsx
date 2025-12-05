@@ -7,14 +7,14 @@ import { StudentProfile } from './components/StudentProfile';
 import { ReportPage } from './components/ReportPage';
 import { Navbar } from './components/Navbar';
 import { Toaster } from './components/ui/sonner';
-import { User, ActivityList, Student } from './types';
+import { User, StudentList, Student } from './types';
 
 type Page = 'login' | 'dashboard' | 'lists' | 'students' | 'student-profile' | 'report';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('login');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [selectedList, setSelectedList] = useState<ActivityList | null>(null);
+  const [selectedList, setSelectedList] = useState<StudentList | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const handleLogin = (user: User) => {
@@ -29,7 +29,7 @@ export default function App() {
     setSelectedStudent(null);
   };
 
-  const navigateTo = (page: Page, list?: ActivityList, student?: Student) => {
+  const navigateTo = (page: Page, list?: StudentList, student?: Student) => {
     setCurrentPage(page);
     if (list) setSelectedList(list);
     if (student) setSelectedStudent(student);

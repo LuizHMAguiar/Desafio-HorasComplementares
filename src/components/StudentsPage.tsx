@@ -4,22 +4,22 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { ActivityList, Student } from '../types';
-import { Plus, Search, Upload, Download, User, FileSpreadsheet, FileText, X } from 'lucide-react';
+import { StudentList, Student } from '../types';
+import { Plus, Search, Upload, Download, User, FileSpreadsheet, FileText } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { downloadStudentsCSV, importStudentsFromCSV, downloadCSVTemplate } from '../utils/exportUtils';
 
 interface StudentsPageProps {
-  list: ActivityList;
-  onNavigate: (page: 'student-profile' | 'report', list?: ActivityList, student?: Student) => void;
+  list: StudentList;
+  onNavigate: (page: 'student-profile' | 'report', list?: StudentList, student?: Student) => void;
 }
 
 const mockStudents: Student[] = [
-  { id: '1', name: 'Ana Paula Costa', cpf: '123.456.789-01', course: 'Engenharia Civil', class: '2024.1', listId: '1', totalHours: 78, status: 'em andamento' },
-  { id: '2', name: 'Carlos Eduardo Silva', cpf: '234.567.890-12', course: 'Engenharia Civil', class: '2024.1', listId: '1', totalHours: 150, status: 'concluído' },
-  { id: '3', name: 'Beatriz Santos', cpf: '345.678.901-23', course: 'Engenharia Mecânica', class: '2024.1', listId: '1', totalHours: 92, status: 'em andamento' },
-  { id: '4', name: 'Daniel Oliveira', cpf: '456.789.012-34', course: 'Engenharia Elétrica', class: '2024.1', listId: '1', totalHours: 45, status: 'em andamento' },
+  { id: 1, name: 'Ana Paula Costa', cpf: '123.456.789-01', course: 'Engenharia Civil', class: '2024.1', listId: 1, totalHours: 78, status: 'em andamento' },
+  { id: 2, name: 'Carlos Eduardo Silva', cpf: '234.567.890-12', course: 'Engenharia Civil', class: '2024.1', listId: 1, totalHours: 150, status: 'concluído' },
+  { id: 3, name: 'Beatriz Santos', cpf: '345.678.901-23', course: 'Engenharia Mecânica', class: '2024.1', listId: 1, totalHours: 92, status: 'em andamento' },
+  { id: 4, name: 'Daniel Oliveira', cpf: '456.789.012-34', course: 'Engenharia Elétrica', class: '2024.1', listId: 1, totalHours: 45, status: 'em andamento' },
 ];
 
 export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
@@ -48,7 +48,7 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
     const formData = new FormData(e.currentTarget);
     
     const newStudent: Student = {
-      id: String(students.length + 1),
+      id: Date.now(), // Using timestamp for a unique ID
       name: formData.get('name') as string,
       cpf: formData.get('cpf') as string,
       course: formData.get('course') as string,

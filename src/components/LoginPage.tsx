@@ -25,14 +25,14 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     setTimeout(() => {
       if (email === 'coordenador@escola.com' && password === '123456') {
         onLogin({
-          id: '1',
+          id: 1,
           name: 'Maria Silva',
           email: email,
           role: 'coordenador'
         });
       } else if (email === 'monitor@escola.com' && password === '123456') {
         onLogin({
-          id: '2',
+          id: 2,
           name: 'João Santos',
           email: email,
           role: 'monitor'
