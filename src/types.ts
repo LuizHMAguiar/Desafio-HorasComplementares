@@ -1,13 +1,13 @@
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: 'coordenador' | 'monitor';
 }
 
 export interface Activity {
-  id: string;
-  studentId: string;
+  id: number;
+  studentId: number;
   type: string;
   hours: number;
   date: string;
@@ -17,18 +17,18 @@ export interface Activity {
 }
 
 export interface Student {
-  id: string;
+  id: number;
   name: string;
   cpf: string;
   course: string;
   class: string;
-  listId: string;
+  listId: number;
   totalHours: number;
   status: 'em andamento' | 'concluído';
 }
 
-export interface ActivityList {
-  id: string;
+export interface StudentList {
+  id: number;
   title: string;
   totalHours: number;
   maxHoursPerType: number;
