@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -8,6 +8,7 @@ import { StudentList, Student } from '../types';
 import { Plus, Search, Upload, Download, User, FileSpreadsheet, FileText } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
+import { api } from '../utils/api';
 import { downloadStudentsCSV, importStudentsFromCSV, downloadCSVTemplate } from '../utils/exportUtils';
 
 interface StudentsPageProps {
@@ -15,15 +16,8 @@ interface StudentsPageProps {
   onNavigate: (page: 'student-profile' | 'report', list?: StudentList, student?: Student) => void;
 }
 
-const mockStudents: Student[] = [
-  { id: 1, name: 'Ana Paula Costa', cpf: '123.456.789-01', course: 'Engenharia Civil', class: '2024.1', listId: 1, totalHours: 78, status: 'em andamento' },
-  { id: 2, name: 'Carlos Eduardo Silva', cpf: '234.567.890-12', course: 'Engenharia Civil', class: '2024.1', listId: 1, totalHours: 150, status: 'concluído' },
-  { id: 3, name: 'Beatriz Santos', cpf: '345.678.901-23', course: 'Engenharia Mecânica', class: '2024.1', listId: 1, totalHours: 92, status: 'em andamento' },
-  { id: 4, name: 'Daniel Oliveira', cpf: '456.789.012-34', course: 'Engenharia Elétrica', class: '2024.1', listId: 1, totalHours: 45, status: 'em andamento' },
-];
-
 export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
-  const [students, setStudents] = useState(mockStudents.filter(s => s.listId === list.id));
+  const [students, setStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
   const [classFilter, setClassFilter] = useState('');
@@ -59,6 +53,14 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
     };
 
     setStudents([...students, newStudent]);
+    // optimistically create on API
+    try {
+      api.createStudent(newStudent).catch(() => {
+        // ignore - keep local state
+      });
+    } catch (err) {
+      // noop
+    }
     setIsAddDialogOpen(false);
     toast.success('Estudante adicionado com sucesso!');
   };
@@ -90,6 +92,22 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
       toast.error('Erro ao importar arquivo CSV');
     }
   };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await api.getStudents({ listId: list.id });
+        if (mounted && Array.isArray(data) && data.length >= 0) {
+          setStudents(data as Student[]);
+        }
+      } catch (error) {
+        console.warn('Could not fetch students:', error);
+        // fallback: keep any existing local data (was mock before)
+      }
+    })();
+    return () => { mounted = false; };
+  }, [list.id]);
 
   const handleDownloadTemplate = (e: React.MouseEvent) => {
     e.preventDefault();

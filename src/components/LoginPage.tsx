@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Alert, AlertDescription } from './ui/alert';
 import { User } from '../types';
+import { api } from '../utils/api';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
@@ -20,28 +21,39 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      if (email === 'coordenador@escola.com' && password === '123456') {
-        onLogin({
-          id: 1,
-          name: 'Maria Silva',
-          email: email,
-          role: 'coordenador'
-        });
-      } else if (email === 'monitor@escola.com' && password === '123456') {
-        onLogin({
-          id: 2,
-          name: 'João Santos',
-          email: email,
-          role: 'monitor'
-        });
+    try {
+      const users = await api.getUsers();
+      const found = (users || []).find(u => u.email === email || (u.cpf && u.cpf === email));
+      if (found) {
+        // if API contains password field, compare; otherwise accept user (demo)
+        // @ts-ignore
+        if (found.password) {
+          // @ts-ignore
+          if (found.password === password) {
+            onLogin(found);
+          } else {
+            setError('Credenciais inválidas');
+          }
+        } else {
+          // No password in API — fall back to demo check or accept any password for known users
+          onLogin(found);
+        }
       } else {
-        setError('Credenciais inválidas');
+        // fallback to local demo accounts
+        if (email === 'coordenador@escola.com' && password === '123456') {
+          onLogin({ id: 1, name: 'Maria Silva', email: email, role: 'coordenador' });
+        } else if (email === 'monitor@escola.com' && password === '123456') {
+          onLogin({ id: 2, name: 'João Santos', email: email, role: 'monitor' });
+        } else {
+          setError('Credenciais inválidas');
+        }
       }
+    } catch (err) {
+      console.warn('Login API error', err);
+      setError('Erro ao conectar com o servidor');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (

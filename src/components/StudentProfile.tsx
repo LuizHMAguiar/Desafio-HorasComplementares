@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -11,6 +11,7 @@ import { Plus, FileText, Edit, Trash2, Download, Upload, X } from 'lucide-react'
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { downloadDocument, handleFileUpload, getMaxDate, isValidDate } from '../utils/exportUtils';
+import { api } from '../utils/api';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,7 +47,23 @@ const mockActivities: Activity[] = [
 ];
 
 export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
-  const [activities, setActivities] = useState(mockActivities.filter(a => a.studentId === student.id));
+  const [activities, setActivities] = useState<Activity[]>([]);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await api.getActivities({ studentId: student.id });
+        if (mounted && Array.isArray(data)) {
+          setActivities(data as Activity[]);
+        }
+      } catch (error) {
+        // fallback to mock activities for this student
+        setActivities(mockActivities.filter(a => a.studentId === student.id));
+        console.warn('Could not fetch activities:', error);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [student.id]);
   const initialActivitiesSumRef = useRef<number>(activities.reduce((sum, a) => sum + a.hours, 0));
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -107,6 +124,13 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
     } else {
       setActivities([...activities, newActivity]);
       toast.success('Atividade cadastrada com sucesso!');
+    }
+
+    // try to persist to API
+    try {
+      api.createActivity(newActivity).catch(() => {});
+    } catch (err) {
+      // noop
     }
 
     setIsAddDialogOpen(false);

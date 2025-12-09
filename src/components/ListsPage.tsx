@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { StudentList } from '../types';
 import { Plus, Search, Edit, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '../utils/api';
 
 interface ListsPageProps {
   onNavigate: (page: 'students', list: StudentList) => void;
@@ -21,7 +22,7 @@ const mockLists: StudentList[] = [
 
 export function ListsPage({ onNavigate }: ListsPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [lists, setLists] = useState(mockLists);
+  const [lists, setLists] = useState<StudentList[]>(mockLists);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingList, setEditingList] = useState<StudentList | null>(null);
 
@@ -53,6 +54,22 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
     setIsCreateDialogOpen(false);
     setEditingList(null);
   };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await api.getStudentLists();
+        if (mounted && Array.isArray(data) && data.length > 0) {
+          setLists(data);
+        }
+      } catch (error) {
+        // keep mocks if API not available
+        console.warn('Could not fetch student lists:', error);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
