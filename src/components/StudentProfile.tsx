@@ -1,17 +1,37 @@
-import { useState, useRef, useEffect } from 'react';
-import { Card } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Progress } from './ui/progress';
-import { Student, Activity } from '../types';
-import { Plus, FileText, Edit, Trash2, Download, Upload, X } from 'lucide-react';
-import { Badge } from './ui/badge';
-import { toast } from 'sonner';
-import { downloadDocument, handleFileUpload, getMaxDate, isValidDate } from '../utils/exportUtils';
-import { api } from '../utils/api';
+import { useState, useRef, useEffect } from "react";
+import { Card } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Progress } from "./ui/progress";
+import { Student, Activity } from "../types";
+import {
+  Plus,
+  FileText,
+  Edit,
+  Trash2,
+  Download,
+  Upload,
+  X,
+} from "lucide-react";
+import { Badge } from "./ui/badge";
+import { toast } from "sonner";
+import {
+  downloadDocument,
+  handleFileUpload,
+  getMaxDate,
+  isValidDate,
+} from "../utils/exportUtils";
+import { api } from "../utils/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,29 +41,61 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from './ui/alert-dialog';
+} from "./ui/alert-dialog";
 
 interface StudentProfileProps {
   student: Student;
-  onNavigate: (page: 'students') => void;
+  onNavigate: (page: "students") => void;
 }
 
 const activityTypes = [
-  'Eventos',
-  'Organização',
-  'Pesquisa',
-  'Extensão',
-  'Monitoria',
-  'Estágio',
-  'Publicações',
-  'Cursos'
+  "Eventos",
+  "Organização",
+  "Pesquisa",
+  "Extensão",
+  "Monitoria",
+  "Estágio",
+  "Publicações",
+  "Cursos",
 ];
 
 const mockActivities: Activity[] = [
-  { id: 1, studentId: 1, type: 'Eventos', hours: 32, date: '2024-03-15', registeredBy: 'Maria Silva', document: 'certificado.pdf' },
-  { id: 2, studentId: 1, type: 'Organização', hours: 10, date: '2024-04-20', registeredBy: 'Maria Silva', document: 'declaracao.pdf' },
-  { id: 3, studentId: 1, type: 'Pesquisa', hours: 20, date: '2024-05-10', registeredBy: 'João Santos', document: 'relatorio.pdf' },
-  { id: 4, studentId: 1, type: 'Extensão', hours: 16, date: '2024-06-05', registeredBy: 'Maria Silva', document: 'comprovante.pdf' },
+  {
+    id: 1,
+    studentId: 1,
+    type: "Eventos",
+    hours: 32,
+    date: "2024-03-15",
+    registeredBy: "Maria Silva",
+    document: "certificado.pdf",
+  },
+  {
+    id: 2,
+    studentId: 1,
+    type: "Organização",
+    hours: 10,
+    date: "2024-04-20",
+    registeredBy: "Maria Silva",
+    document: "declaracao.pdf",
+  },
+  {
+    id: 3,
+    studentId: 1,
+    type: "Pesquisa",
+    hours: 20,
+    date: "2024-05-10",
+    registeredBy: "João Santos",
+    document: "relatorio.pdf",
+  },
+  {
+    id: 4,
+    studentId: 1,
+    type: "Extensão",
+    hours: 16,
+    date: "2024-06-05",
+    registeredBy: "Maria Silva",
+    document: "comprovante.pdf",
+  },
 ];
 
 export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
@@ -58,38 +110,44 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
         }
       } catch (error) {
         // fallback to mock activities for this student
-        setActivities(mockActivities.filter(a => a.studentId === student.id));
-        console.warn('Could not fetch activities:', error);
+        setActivities(mockActivities.filter((a) => a.studentId === student.id));
+        console.warn("Could not fetch activities:", error);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [student.id]);
-  const initialActivitiesSumRef = useRef<number>(activities.reduce((sum, a) => sum + a.hours, 0));
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [deleteActivityId, setDeleteActivityId] = useState<number | null>(null);
-  const [typeFilter, setTypeFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
-  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number } | null>(null);
+  const [typeFilter, setTypeFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<{
+    name: string;
+    size: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const totalHours = 150;
 
-  // displayedTotalHours = base student.totalHours + (current activities sum - initial activities sum)
-  // This way, the UI reflects additions/edits/deletes done while the profile is open
+  // Calculate total hours from current activities
   const currentActivitiesSum = activities.reduce((sum, a) => sum + a.hours, 0);
-  const displayedTotalHours = Math.max(0, student.totalHours + (currentActivitiesSum - initialActivitiesSumRef.current));
-  const progressPercentage = Math.min((displayedTotalHours / totalHours) * 100, 100);
+  const displayedTotalHours = currentActivitiesSum;
+  const progressPercentage = Math.min(
+    (displayedTotalHours / totalHours) * 100,
+    100
+  );
 
   // Calculate hours by type
-  const hoursByType = activityTypes.map(type => {
+  const hoursByType = activityTypes.map((type) => {
     const typeHours = activities
-      .filter(a => a.type === type)
+      .filter((a) => a.type === type)
       .reduce((sum, a) => sum + a.hours, 0);
     return { type, hours: typeHours };
   });
 
-  const filteredActivities = activities.filter(activity => {
+  const filteredActivities = activities.filter((activity) => {
     const matchesType = !typeFilter || activity.type === typeFilter;
     const matchesDate = !dateFilter || activity.date.includes(dateFilter);
     return matchesType && matchesDate;
@@ -98,32 +156,34 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
   const handleSaveActivity = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
-    const date = formData.get('date') as string;
-    
+
+    const date = formData.get("date") as string;
+
     // Validate date is not in the future
     if (!isValidDate(date)) {
-      toast.error('A data não pode ser posterior à data atual');
+      toast.error("A data não pode ser posterior à data atual");
       return;
     }
-    
+
     const newActivity: Activity = {
       id: editingActivity?.id || Date.now(), // Using timestamp for a unique ID
       studentId: student.id,
-      type: formData.get('type') as string,
-      hours: Number(formData.get('hours')),
+      type: formData.get("type") as string,
+      hours: Number(formData.get("hours")),
       date: date,
-      registeredBy: 'Maria Silva',
-      notes: formData.get('notes') as string || undefined,
+      registeredBy: "Maria Silva",
+      notes: (formData.get("notes") as string) || undefined,
       document: uploadedFile?.name || editingActivity?.document,
     };
 
     if (editingActivity) {
-      setActivities(activities.map(a => a.id === editingActivity.id ? newActivity : a));
-      toast.success('Atividade atualizada com sucesso!');
+      setActivities(
+        activities.map((a) => (a.id === editingActivity.id ? newActivity : a))
+      );
+      toast.success("Atividade atualizada com sucesso!");
     } else {
       setActivities([...activities, newActivity]);
-      toast.success('Atividade cadastrada com sucesso!');
+      toast.success("Atividade cadastrada com sucesso!");
     }
 
     // try to persist to API
@@ -137,14 +197,14 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
     setEditingActivity(null);
     setUploadedFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const handleDeleteActivity = () => {
     if (deleteActivityId) {
-      setActivities(activities.filter(a => a.id !== deleteActivityId));
-      toast.success('Atividade excluída com sucesso!');
+      setActivities(activities.filter((a) => a.id !== deleteActivityId));
+      toast.success("Atividade excluída com sucesso!");
       setDeleteActivityId(null);
     }
   };
@@ -157,7 +217,7 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
         setUploadedFile({ name: fileData.name, size: fileData.size });
         toast.success(`Arquivo "${fileData.name}" carregado com sucesso!`);
       } catch (error) {
-        toast.error('Erro ao carregar arquivo');
+        toast.error("Erro ao carregar arquivo");
       }
     }
   };
@@ -165,9 +225,9 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
   const handleRemoveFile = () => {
     setUploadedFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
-    toast.info('Arquivo removido');
+    toast.info("Arquivo removido");
   };
 
   const handleDownloadDocument = (filename: string) => {
@@ -177,7 +237,11 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Button variant="outline" onClick={() => onNavigate('students')} className="mb-6">
+      <Button
+        variant="outline"
+        onClick={() => onNavigate("students")}
+        className="mb-6"
+      >
         ← Voltar
       </Button>
 
@@ -197,38 +261,48 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
           <div className="flex items-center justify-between mb-2">
             <span className="text-gray-700">Progresso Total</span>
             <span className="text-gray-900">
-              {displayedTotalHours}h / {totalHours}h ({progressPercentage.toFixed(0)}%)
+              {displayedTotalHours}h / {totalHours}h (
+              {progressPercentage.toFixed(0)}%)
             </span>
           </div>
           <Progress value={progressPercentage} className="h-3" />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {hoursByType.filter(item => item.hours > 0).map(item => (
-            <Card key={item.type} className="p-4 bg-gray-50">
-              <div className="text-sm text-gray-600 mb-1">{item.type}</div>
-              <div className="text-gray-900">{item.hours}h</div>
-            </Card>
-          ))}
+          {hoursByType
+            .filter((item) => item.hours > 0)
+            .map((item) => (
+              <Card key={item.type} className="p-4 bg-gray-50">
+                <div className="text-sm text-gray-600 mb-1">{item.type}</div>
+                <div className="text-gray-900">{item.hours}h</div>
+              </Card>
+            ))}
         </div>
       </Card>
 
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-gray-900">Atividades Registradas</h2>
-          
+
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2" onClick={() => setEditingActivity(null)}>
+              <Button
+                className="gap-2"
+                onClick={() => setEditingActivity(null)}
+              >
                 <Plus className="w-4 h-4" />
                 Adicionar atividade
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingActivity ? 'Editar Atividade' : 'Registrar Atividade'}</DialogTitle>
+                <DialogTitle>
+                  {editingActivity ? "Editar Atividade" : "Registrar Atividade"}
+                </DialogTitle>
                 <DialogDescription>
-                  {editingActivity ? 'Edite as informações da atividade complementar.' : 'Registre uma nova atividade complementar do estudante.'}
+                  {editingActivity
+                    ? "Edite as informações da atividade complementar."
+                    : "Registre uma nova atividade complementar do estudante."}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSaveActivity} className="space-y-4">
@@ -242,8 +316,10 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
                     required
                   >
                     <option value="">Selecione...</option>
-                    {activityTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
+                    {activityTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -275,16 +351,18 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="document">Documento Comprobatório *</Label>
-                  <div 
+                  <div
                     className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">Arraste um arquivo ou clique para selecionar</p>
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      onChange={handleFileChange} 
+                    <p className="text-sm text-gray-600">
+                      Arraste um arquivo ou clique para selecionar
+                    </p>
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileChange}
                       ref={fileInputRef}
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     />
@@ -293,12 +371,19 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
                     <div className="mt-2 flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
                       <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-600">{uploadedFile.name}</span>
+                        <span className="text-sm text-gray-600">
+                          {uploadedFile.name}
+                        </span>
                         <span className="text-xs text-gray-400">
                           ({(uploadedFile.size / 1024).toFixed(1)} KB)
                         </span>
                       </div>
-                      <Button type="button" variant="ghost" size="sm" onClick={handleRemoveFile}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveFile}
+                      >
                         <X className="w-4 h-4 text-gray-500" />
                       </Button>
                     </div>
@@ -316,7 +401,11 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
                 </div>
 
                 <div className="flex gap-2 justify-end">
-                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAddDialogOpen(false)}
+                  >
                     Cancelar
                   </Button>
                   <Button type="submit">Salvar</Button>
@@ -333,8 +422,10 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
             onChange={(e) => setTypeFilter(e.target.value)}
           >
             <option value="">Todos os tipos</option>
-            {activityTypes.map(type => (
-              <option key={type} value={type}>{type}</option>
+            {activityTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
             ))}
           </select>
           <Input
@@ -353,7 +444,9 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
                 <th className="text-left py-3 px-4 text-gray-600">Tipo</th>
                 <th className="text-left py-3 px-4 text-gray-600">CH</th>
                 <th className="text-left py-3 px-4 text-gray-600">Data</th>
-                <th className="text-left py-3 px-4 text-gray-600">Registrado por</th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Registrado por
+                </th>
                 <th className="text-left py-3 px-4 text-gray-600">Documento</th>
                 <th className="text-left py-3 px-4 text-gray-600">Ações</th>
               </tr>
@@ -367,18 +460,32 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
                 </tr>
               ) : (
                 filteredActivities.map((activity) => (
-                  <tr key={activity.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr
+                    key={activity.id}
+                    className="border-b border-gray-100 hover:bg-gray-50"
+                  >
                     <td className="py-3 px-4">
                       <Badge variant="outline">{activity.type}</Badge>
                     </td>
-                    <td className="py-3 px-4 text-gray-600">{activity.hours}h</td>
                     <td className="py-3 px-4 text-gray-600">
-                      {new Date(activity.date).toLocaleDateString('pt-BR')}
+                      {activity.hours}h
                     </td>
-                    <td className="py-3 px-4 text-gray-600">{activity.registeredBy}</td>
+                    <td className="py-3 px-4 text-gray-600">
+                      {new Date(activity.date).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="py-3 px-4 text-gray-600">
+                      {activity.registeredBy}
+                    </td>
                     <td className="py-3 px-4">
                       {activity.document && (
-                        <Button variant="ghost" size="sm" className="gap-2" onClick={() => handleDownloadDocument(activity.document!)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() =>
+                            handleDownloadDocument(activity.document!)
+                          }
+                        >
                           <Download className="w-4 h-4" />
                           {activity.document}
                         </Button>
@@ -413,17 +520,24 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
         </div>
       </Card>
 
-      <AlertDialog open={!!deleteActivityId} onOpenChange={() => setDeleteActivityId(null)}>
+      <AlertDialog
+        open={!!deleteActivityId}
+        onOpenChange={() => setDeleteActivityId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir esta atividade? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir esta atividade? Esta ação não pode
+              ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteActivity} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={handleDeleteActivity}
+              className="bg-red-600 hover:bg-red-700"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

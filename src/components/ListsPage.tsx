@@ -1,54 +1,89 @@
-import { useState, useEffect } from 'react';
-import { Card } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { StudentList } from '../types';
-import { Plus, Search, Edit, FolderOpen } from 'lucide-react';
-import { toast } from 'sonner';
-import { api } from '../utils/api';
+import { useState, useEffect } from "react";
+import { Card } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { StudentList } from "../types";
+import { Plus, Search, Edit, FolderOpen } from "lucide-react";
+import { toast } from "sonner";
+import { api } from "../utils/api";
 
 interface ListsPageProps {
-  onNavigate: (page: 'students', list: StudentList) => void;
+  onNavigate: (page: "students", list: StudentList) => void;
 }
 
 const mockLists: StudentList[] = [
-  { id: 1, title: 'Turma 2024.1 - Engenharia', totalHours: 150, maxHoursPerType: 50, studentCount: 45, createdAt: '2024-01-15' },
-  { id: 2, title: 'Turma 2024.1 - Administração', totalHours: 150, maxHoursPerType: 50, studentCount: 38, createdAt: '2024-01-20' },
-  { id: 3, title: 'Turma 2023.2 - Direito', totalHours: 150, maxHoursPerType: 50, studentCount: 52, createdAt: '2023-08-10' },
-  { id: 4, title: 'Turma 2024.2 - Medicina', totalHours: 200, maxHoursPerType: 60, studentCount: 30, createdAt: '2024-07-01' },
+  {
+    id: 1,
+    title: "Turma 2024.1 - Engenharia",
+    totalHours: 150,
+    maxHoursPerType: 50,
+    studentCount: 45,
+    createdAt: "2024-01-15",
+  },
+  {
+    id: 2,
+    title: "Turma 2024.1 - Administração",
+    totalHours: 150,
+    maxHoursPerType: 50,
+    studentCount: 38,
+    createdAt: "2024-01-20",
+  },
+  {
+    id: 3,
+    title: "Turma 2023.2 - Direito",
+    totalHours: 150,
+    maxHoursPerType: 50,
+    studentCount: 52,
+    createdAt: "2023-08-10",
+  },
+  {
+    id: 4,
+    title: "Turma 2024.2 - Medicina",
+    totalHours: 200,
+    maxHoursPerType: 60,
+    studentCount: 30,
+    createdAt: "2024-07-01",
+  },
 ];
 
 export function ListsPage({ onNavigate }: ListsPageProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [lists, setLists] = useState<StudentList[]>(mockLists);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingList, setEditingList] = useState<StudentList | null>(null);
 
-  const filteredLists = lists.filter(list =>
+  const filteredLists = lists.filter((list) =>
     list.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSaveList = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
     const newList: StudentList = {
       id: editingList?.id || Date.now(), // Using timestamp for a unique ID
-      title: formData.get('title') as string,
-      totalHours: Number(formData.get('totalHours')),
-      maxHoursPerType: Number(formData.get('maxHoursPerType')),
+      title: formData.get("title") as string,
+      totalHours: Number(formData.get("totalHours")),
+      maxHoursPerType: Number(formData.get("maxHoursPerType")),
       studentCount: editingList?.studentCount || 0,
       createdAt: editingList?.createdAt || new Date().toISOString(),
     };
 
     if (editingList) {
-      setLists(lists.map(l => l.id === editingList.id ? newList : l));
-      toast.success('Lista atualizada com sucesso!');
+      setLists(lists.map((l) => (l.id === editingList.id ? newList : l)));
+      toast.success("Lista atualizada com sucesso!");
     } else {
       setLists([...lists, newList]);
-      toast.success('Lista criada com sucesso!');
+      toast.success("Lista criada com sucesso!");
     }
 
     setIsCreateDialogOpen(false);
@@ -65,10 +100,12 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
         }
       } catch (error) {
         // keep mocks if API not available
-        console.warn('Could not fetch student lists:', error);
+        console.warn("Could not fetch student lists:", error);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -76,9 +113,11 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-gray-900 mb-2">Listas de Atividades</h1>
-          <p className="text-gray-600">Gerencie as listas de atividades complementares</p>
+          <p className="text-gray-600">
+            Gerencie as listas de atividades complementares
+          </p>
         </div>
-        
+
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2" onClick={() => setEditingList(null)}>
@@ -88,9 +127,13 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingList ? 'Editar Lista' : 'Criar Nova Lista'}</DialogTitle>
+              <DialogTitle>
+                {editingList ? "Editar Lista" : "Criar Nova Lista"}
+              </DialogTitle>
               <DialogDescription>
-                {editingList ? 'Edite as configurações da lista de atividades.' : 'Configure uma nova lista de atividades complementares.'}
+                {editingList
+                  ? "Edite as configurações da lista de atividades."
+                  : "Configure uma nova lista de atividades complementares."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSaveList} className="space-y-4">
@@ -106,7 +149,9 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="totalHours">Carga Horária Total Necessária</Label>
+                <Label htmlFor="totalHours">
+                  Carga Horária Total Necessária
+                </Label>
                 <Input
                   id="totalHours"
                   name="totalHours"
@@ -136,7 +181,11 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
               </p>
 
               <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsCreateDialogOpen(false)}
+                >
                   Cancelar
                 </Button>
                 <Button type="submit">Salvar</Button>
@@ -163,10 +212,18 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-gray-600">Título da Lista</th>
-                <th className="text-left py-3 px-4 text-gray-600">Carga Horária Total</th>
-                <th className="text-left py-3 px-4 text-gray-600">Máximo por Tipo</th>
-                <th className="text-left py-3 px-4 text-gray-600">Nº de Estudantes</th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Título da Lista
+                </th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Carga Horária Total
+                </th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Máximo por Tipo
+                </th>
+                <th className="text-left py-3 px-4 text-gray-600">
+                  Nº de Estudantes
+                </th>
                 <th className="text-left py-3 px-4 text-gray-600">Ações</th>
               </tr>
             </thead>
@@ -179,17 +236,26 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
                 </tr>
               ) : (
                 filteredLists.map((list) => (
-                  <tr key={list.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr
+                    key={list.id}
+                    className="border-b border-gray-100 hover:bg-gray-50"
+                  >
                     <td className="py-3 px-4 text-gray-900">{list.title}</td>
-                    <td className="py-3 px-4 text-gray-600">{list.totalHours}h</td>
-                    <td className="py-3 px-4 text-gray-600">{list.maxHoursPerType}h</td>
-                    <td className="py-3 px-4 text-gray-600">{list.studentCount}</td>
+                    <td className="py-3 px-4 text-gray-600">
+                      {list.totalHours}h
+                    </td>
+                    <td className="py-3 px-4 text-gray-600">
+                      {list.maxHoursPerType}h
+                    </td>
+                    <td className="py-3 px-4 text-gray-600">
+                      {list.studentCount}
+                    </td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => onNavigate('students', list)}
+                          onClick={() => onNavigate("students", list)}
                           className="gap-2"
                         >
                           <FolderOpen className="w-4 h-4" />
