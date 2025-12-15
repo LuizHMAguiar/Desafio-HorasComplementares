@@ -57,4 +57,8 @@
       port: 3000,
       open: true,
     },
+    // Allow preview to accept requests from this external host
+    preview: {
+      allowedHosts: ['desafio-horascomplementares.onrender.com'],
+    },
   });
