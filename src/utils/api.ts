@@ -94,10 +94,12 @@ export const api = {
     return handleResponse(res);
   },
   createActivity: async (data: Partial<Activity>): Promise<Activity> => {
+    const { id, ...activityData } = data;
+
     const res = await fetch(`${API_BASE}/activities`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(activityData),
     });
     return handleResponse(res);
   },

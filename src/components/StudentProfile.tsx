@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { Progress } from "./ui/progress";
-import { Student, Activity } from "../types";
+import { Student, Activity, User } from "../types";
 import {
   Plus,
   FileText,
@@ -45,6 +45,7 @@ import {
 
 interface StudentProfileProps {
   student: Student;
+  user: User;
   onNavigate: (page: "students") => void;
 }
 
@@ -98,7 +99,11 @@ const mockActivities: Activity[] = [
   },
 ];
 
-export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
+export function StudentProfile({
+  student,
+  user,
+  onNavigate,
+}: StudentProfileProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   useEffect(() => {
     let mounted = true;
@@ -165,30 +170,37 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
       return;
     }
 
-    const newActivity: Activity = {
-      id: editingActivity?.id || Date.now(), // Using timestamp for a unique ID
+    const activityToSave: Omit<Activity, "id"> = {
       studentId: student.id,
       type: formData.get("type") as string,
       hours: Number(formData.get("hours")),
       date: date,
-      registeredBy: "Maria Silva",
+      registeredBy: user.name,
       notes: (formData.get("notes") as string) || undefined,
       document: uploadedFile?.name || editingActivity?.document,
     };
 
     if (editingActivity) {
+      const updatedActivity = { ...activityToSave, id: editingActivity.id };
       setActivities(
-        activities.map((a) => (a.id === editingActivity.id ? newActivity : a))
+        activities.map((a) =>
+          a.id === editingActivity.id ? updatedActivity : a
+        )
       );
       toast.success("Atividade atualizada com sucesso!");
     } else {
+      const newActivity = { ...activityToSave, id: null}; // temporary id
       setActivities([...activities, newActivity]);
       toast.success("Atividade cadastrada com sucesso!");
     }
 
     // try to persist to API
     try {
-      api.createActivity(newActivity).catch(() => {});
+      if (editingActivity) {
+        api.updateActivity(editingActivity.id, activityToSave);
+      } else {
+        api.createActivity(activityToSave);
+      }
     } catch (err) {
       // noop
     }
@@ -206,7 +218,16 @@ export function StudentProfile({ student, onNavigate }: StudentProfileProps) {
       setActivities(activities.filter((a) => a.id !== deleteActivityId));
       toast.success("Atividade excluída com sucesso!");
       setDeleteActivityId(null);
-    }
+      try {
+        api.deleteActivity(deleteActivityId);
+        setActivities(activities.filter((a) => a.id !== deleteActivityId));
+        toast.success("Atividade excluída com sucesso!");
+        setDeleteActivityId(null);
+      } catch (err) {
+        toast.success("Erro ao excluir!");
+      }
+    }    
+
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
