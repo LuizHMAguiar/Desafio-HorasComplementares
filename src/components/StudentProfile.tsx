@@ -31,7 +31,7 @@ import {
   getMaxDate,
   isValidDate,
 } from "../utils/exportUtils";
-import { api } from "../utils/api";
+import api from "../utils/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -158,7 +158,7 @@ export function StudentProfile({
     return matchesType && matchesDate;
   });
 
-  const handleSaveActivity = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveActivity = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
@@ -181,28 +181,30 @@ export function StudentProfile({
     };
 
     if (editingActivity) {
-      const updatedActivity = { ...activityToSave, id: editingActivity.id };
-      setActivities(
-        activities.map((a) =>
-          a.id === editingActivity.id ? updatedActivity : a
-        )
-      );
+      const updatedActivity = { ...activityToSave, id: editingActivity.id } as Activity;
+      setActivities((prev) => prev.map((a) => (a.id === editingActivity.id ? updatedActivity : a)));
       toast.success("Atividade atualizada com sucesso!");
-    } else {
-      const newActivity = { ...activityToSave, id: null}; // temporary id
-      setActivities([...activities, newActivity]);
-      toast.success("Atividade cadastrada com sucesso!");
-    }
-
-    // try to persist to API
-    try {
-      if (editingActivity) {
-        api.updateActivity(editingActivity.id, activityToSave);
-      } else {
-        api.createActivity(activityToSave);
+      try {
+        await api.updateActivity(editingActivity.id, activityToSave);
+      } catch (err) {
+        console.warn('Falha ao atualizar atividade na API', err);
       }
-    } catch (err) {
-      // noop
+    } else {
+      // create temporary id to keep UI responsive
+      const tempId = Date.now();
+      const newActivity = { ...(activityToSave as Activity), id: tempId };
+      setActivities((prev) => [...prev, newActivity]);
+      toast.success("Atividade cadastrada com sucesso!");
+
+      try {
+        const created = await api.createActivity(activityToSave);
+        // replace temp activity with one returned by API (if API returns full object)
+        if (created && typeof created.id === 'number') {
+          setActivities((prev) => prev.map((a) => (a.id === tempId ? created : a)));
+        }
+      } catch (err) {
+        console.warn('Falha ao criar atividade na API', err);
+      }
     }
 
     setIsAddDialogOpen(false);
@@ -213,21 +215,21 @@ export function StudentProfile({
     }
   };
 
-  const handleDeleteActivity = () => {
-    if (deleteActivityId) {
-      setActivities(activities.filter((a) => a.id !== deleteActivityId));
-      toast.success("Atividade excluída com sucesso!");
-      setDeleteActivityId(null);
-      try {
-        api.deleteActivity(deleteActivityId);
-        setActivities(activities.filter((a) => a.id !== deleteActivityId));
-        toast.success("Atividade excluída com sucesso!");
-        setDeleteActivityId(null);
-      } catch (err) {
-        toast.success("Erro ao excluir!");
-      }
-    }    
+  const handleDeleteActivity = async () => {
+    const id = deleteActivityId;
+    if (!id) return;
 
+    // optimistic UI update
+    setActivities((prev) => prev.filter((a) => a.id !== id));
+    setDeleteActivityId(null);
+
+    try {
+      await api.deleteActivity(id);
+      toast.success("Atividade excluída com sucesso!");
+    } catch (err) {
+      toast.error("Erro ao excluir!");
+      console.warn('Falha ao excluir atividade na API', err);
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

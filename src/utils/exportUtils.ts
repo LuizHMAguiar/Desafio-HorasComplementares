@@ -128,7 +128,7 @@ export function downloadReportCSV(reportData: ReportData[], listTitle: string) {
 /**
  * Download report as PDF (using browser print to PDF)
  */
-export function downloadPDF(elementId: string, filename: string) {
+export async function downloadPDF(elementId: string, filename: string) {
   try {
     const element = elementId ? document.getElementById(elementId) : document.body;
     const title = filename || document.title || 'relatorio';
@@ -142,20 +142,303 @@ export function downloadPDF(elementId: string, filename: string) {
       return;
     }
 
-    printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title></head><body>`);
-    printWindow.document.write(element ? element.innerHTML : document.body.innerHTML);
-    printWindow.document.write('</body></html>');
+    // Create basic document skeleton first
+    printWindow.document.open();
+    printWindow.document.write('<!doctype html><html><head></head><body></body></html>');
     printWindow.document.close();
-    printWindow.focus();
-    // Delay to ensure content is rendered
-    setTimeout(() => {
-      printWindow.print();
-      // Fecha a janela após impressão (se permitido pelo navegador)
-      setTimeout(() => printWindow.close(), 500);
-    }, 250);
+
+    // Copy original head (styles, fonts, meta) to new window to preserve layout
+    try {
+      // Insert a <base> so relative URLs resolve correctly in the new window
+      const base = `<base href="${location.origin + location.pathname}">`;
+      const headHtml = base + document.head.innerHTML;
+
+      // Temporary print styles to better match on-paper appearance
+      const tempPrintStyles = `
+        <style>
+          @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+          body { background: #fff; }
+          .print-root { box-sizing: border-box; width: 210mm; margin: 0 auto; padding: 12mm; }
+          .print-root img { max-width: 180px; height: auto; }
+        </style>
+      `;
+
+      printWindow.document.head.innerHTML = headHtml + tempPrintStyles;
+
+      // Clone the element into the print window inside a wrapper for sizing
+      const cloned = (element ? element.cloneNode(true) as HTMLElement : document.body.cloneNode(true) as HTMLElement);
+      const wrapper = printWindow.document.createElement('div');
+      wrapper.className = 'print-root';
+      wrapper.appendChild(cloned);
+      printWindow.document.body.innerHTML = '';
+      printWindow.document.body.appendChild(wrapper);
+
+      // Wait for fonts and images to load in the new window before printing
+      const waitForResources = async () => {
+        try {
+          if (printWindow.document.fonts && 'ready' in printWindow.document.fonts) {
+            await (printWindow.document.fonts as any).ready;
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        const imgs = Array.from(printWindow.document.images || []);
+        if (imgs.length === 0) return;
+
+        await new Promise((res) => {
+          let loaded = 0;
+          const onDone = () => { loaded++; if (loaded >= imgs.length) res(null); };
+          imgs.forEach((img) => {
+            if ((img as HTMLImageElement).complete) onDone();
+            else {
+              img.addEventListener('load', onDone);
+              img.addEventListener('error', onDone);
+            }
+          });
+          // Fallback timeout
+          setTimeout(res, 2000);
+        });
+      };
+
+      await waitForResources();
+
+      printWindow.focus();
+      // Delay slightly to ensure rendering
+      setTimeout(() => {
+        try {
+          printWindow.print();
+        } catch (e) {
+          console.warn('Erro ao chamar print() na nova janela:', e);
+        }
+        // Close window after print dialog
+        setTimeout(() => {
+          try { printWindow.close(); } catch (e) { /* ignore */ }
+        }, 500);
+      }, 250);
+    } catch (err) {
+      console.error('Erro ao preparar janela de impressão:', err);
+      try { window.print(); } catch (e) { /* ignore */ }
+    }
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);
     window.print();
+  }
+}
+
+/**
+ * Generate and download PDF programmatically using html2canvas + jsPDF.
+ * This produces a downloadable PDF without opening print dialog.
+ */
+export async function downloadReportAsPDF(elementId: string | undefined, filename?: string) {
+  try {
+    console.log('downloadReportAsPDF: iniciando para', elementId, filename);
+    const element = elementId ? document.getElementById(elementId) : document.body;
+    if (!element) throw new Error('Elemento não encontrado para gerar PDF');
+
+    // Dynamic imports so app still builds if libs are not used elsewhere
+    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+      // @ts-ignore
+      import('html2canvas'),
+      // @ts-ignore
+      import('jspdf')
+    ]);
+    // Clone element to avoid modifying original layout
+    const clone = element.cloneNode(true) as HTMLElement;
+    clone.style.boxSizing = 'border-box';
+    // Set width to A4 at 96dpi ~ 794px to better match printed page
+    clone.style.width = '794px';
+    clone.style.maxWidth = '794px';
+    clone.style.margin = '0';
+
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'fixed';
+    wrapper.style.left = '-9999px';
+    wrapper.style.top = '0';
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
+
+    // Inline computed colors to avoid html2canvas failing on new color functions (e.g. oklch)
+    function inlineComputedColors(root: HTMLElement) {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null as any);
+      const elements: HTMLElement[] = [];
+      let node = root as Node | null;
+      while (node) {
+        if (node.nodeType === Node.ELEMENT_NODE) elements.push(node as HTMLElement);
+        node = walker.nextNode();
+      }
+
+      // single canvas to parse colors
+      const parseCanvas = document.createElement('canvas');
+      parseCanvas.width = 1;
+      parseCanvas.height = 1;
+      const pCtx = parseCanvas.getContext('2d');
+
+      async function parseColorToRGBA(colorStr: string): Promise<string | null> {
+        if (!pCtx) return null;
+        try {
+          pCtx.clearRect(0, 0, 1, 1);
+          pCtx.fillStyle = '#000';
+          // assign, browser should parse supported color formats
+          pCtx.fillStyle = colorStr;
+          pCtx.fillRect(0, 0, 1, 1);
+          const d = pCtx.getImageData(0, 0, 1, 1).data;
+          return `rgba(${d[0]}, ${d[1]}, ${d[2]}, ${+(d[3] / 255).toFixed(3)})`;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      const colorFuncRegex = /(oklch\([^)]*\))/gi;
+
+      elements.forEach((el) => {
+        try {
+          const cs = window.getComputedStyle(el);
+          if (!cs) return;
+
+          // helper to replace oklch occurrences inside a css value
+          const replaceColorFuncs = async (value: string) => {
+            if (!value) return value;
+            const matches = Array.from(value.matchAll(colorFuncRegex));
+            if (matches.length === 0) return value;
+            let newValue = value;
+            for (const m of matches) {
+              const func = m[1];
+              const parsed = await parseColorToRGBA(func).catch(() => null);
+              if (parsed) newValue = newValue.replace(func, parsed);
+            }
+            return newValue;
+          };
+
+          // inline simple properties synchronously where possible
+          (async () => {
+            // color
+            let colorVal = cs.color;
+            if (colorVal && colorVal.toLowerCase().includes('oklch')) {
+              const resolved = await parseColorToRGBA(colorVal);
+              if (resolved) el.style.color = resolved;
+            } else if (colorVal) {
+              el.style.color = colorVal;
+            }
+
+            // background-color
+            let bg = cs.backgroundColor;
+            if (bg && bg.toLowerCase().includes('oklch')) {
+              const resolved = await parseColorToRGBA(bg);
+              if (resolved) el.style.backgroundColor = resolved;
+            } else if (bg) {
+              el.style.backgroundColor = bg;
+            }
+
+            // border color
+            let bcol = cs.borderColor;
+            if (bcol && bcol.toLowerCase().includes('oklch')) {
+              const resolved = await parseColorToRGBA(bcol);
+              if (resolved) el.style.borderColor = resolved;
+            } else if (bcol) {
+              el.style.borderColor = bcol;
+            }
+
+            // outline
+            let ocol = cs.outlineColor;
+            if (ocol && ocol.toLowerCase().includes('oklch')) {
+              const resolved = await parseColorToRGBA(ocol);
+              if (resolved) el.style.outlineColor = resolved;
+            } else if (ocol) {
+              el.style.outlineColor = ocol;
+            }
+
+            // box-shadow may contain color functions inside; replace occurrences
+            let bs = cs.boxShadow;
+            if (bs && bs !== 'none') {
+              if (bs.toLowerCase().includes('oklch')) {
+                const replaced = await replaceColorFuncs(bs);
+                el.style.boxShadow = replaced;
+              } else {
+                el.style.boxShadow = bs;
+              }
+            }
+          })();
+        } catch (e) {
+          // ignore elements that throw on computedStyle
+        }
+      });
+    }
+
+    try {
+      inlineComputedColors(clone);
+    } catch (e) {
+      // continue even if inlining fails
+      console.warn('Falha ao injetar estilos computados:', e);
+    }
+
+    const canvas = await html2canvas(clone, { scale: 2, useCORS: true });
+
+    // remove clone after render
+    document.body.removeChild(wrapper);
+
+    const imgDataFull = canvas.toDataURL('image/png');
+
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageWidthMM = pdf.internal.pageSize.getWidth(); // 210
+    const pageHeightMM = pdf.internal.pageSize.getHeight(); // 297
+
+    // calculate px per mm for this canvas
+    const pxPerMM = canvas.width / pageWidthMM;
+    const pageHeightPx = Math.floor(pageHeightMM * pxPerMM);
+
+    let renderedHeight = 0;
+    let pageIndex = 0;
+
+    while (renderedHeight < canvas.height) {
+      const canvasPage = document.createElement('canvas');
+      canvasPage.width = canvas.width;
+      const remaining = canvas.height - renderedHeight;
+      canvasPage.height = remaining > pageHeightPx ? pageHeightPx : remaining;
+
+      const ctx = canvasPage.getContext('2d');
+      if (!ctx) throw new Error('Não foi possível obter contexto do canvas');
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvasPage.width, canvasPage.height);
+
+      ctx.drawImage(
+        canvas,
+        0,
+        renderedHeight,
+        canvas.width,
+        canvasPage.height,
+        0,
+        0,
+        canvas.width,
+        canvasPage.height
+      );
+
+      const imgData = canvasPage.toDataURL('image/png');
+
+      const imgHeightMM = canvasPage.height / pxPerMM;
+
+      if (pageIndex > 0) pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, 0, pageWidthMM, imgHeightMM);
+
+      renderedHeight += canvasPage.height;
+      pageIndex++;
+    }
+
+    const name = filename || `relatorio_${sanitizeFilename(document.title || 'relatorio')}_${getDateString()}.pdf`;
+    pdf.save(name);
+  } catch (error) {
+    console.error('Erro ao gerar PDF programaticamente:', error);
+    // Fallback: abrir modal de impressão (inline) para permitir o usuário gerar PDF via print
+    try {
+      downloadPDF(elementId || '', filename || 'relatorio.pdf');
+      return;
+    } catch (e) {
+      // Se também falhar, propagar erro
+      throw error;
+    }
   }
 }
 
@@ -296,16 +579,16 @@ export function readCSVFile(file: File): Promise<Record<string, string>[]> {
       reject(new Error('O arquivo deve ser do tipo CSV'));
       return;
     }
-    
+
     // Validate file size (max 5MB for CSV)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       reject(new Error('Arquivo CSV muito grande. Tamanho máximo: 5MB'));
       return;
     }
-    
+
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       const text = e.target?.result as string;
       try {
@@ -319,11 +602,11 @@ export function readCSVFile(file: File): Promise<Record<string, string>[]> {
         reject(new Error('Erro ao processar arquivo CSV'));
       }
     };
-    
+
     reader.onerror = () => {
       reject(new Error('Erro ao ler arquivo CSV'));
     };
-    
+
     reader.readAsText(file, 'UTF-8');
   });
 }
