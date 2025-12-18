@@ -20,44 +20,9 @@ interface ListsPageProps {
   onNavigate: (page: "students", list: StudentList) => void;
 }
 
-const mockLists: StudentList[] = [
-  {
-    id: 1,
-    title: "Turma 2024.1 - Engenharia",
-    totalHours: 150,
-    maxHoursPerType: 50,
-    studentCount: 45,
-    createdAt: "2024-01-15",
-  },
-  {
-    id: 2,
-    title: "Turma 2024.1 - Administração",
-    totalHours: 150,
-    maxHoursPerType: 50,
-    studentCount: 38,
-    createdAt: "2024-01-20",
-  },
-  {
-    id: 3,
-    title: "Turma 2023.2 - Direito",
-    totalHours: 150,
-    maxHoursPerType: 50,
-    studentCount: 52,
-    createdAt: "2023-08-10",
-  },
-  {
-    id: 4,
-    title: "Turma 2024.2 - Medicina",
-    totalHours: 200,
-    maxHoursPerType: 60,
-    studentCount: 30,
-    createdAt: "2024-07-01",
-  },
-];
-
 export function ListsPage({ onNavigate }: ListsPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [lists, setLists] = useState<StudentList[]>(mockLists);
+  const [lists, setLists] = useState<StudentList[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingList, setEditingList] = useState<StudentList | null>(null);
 
@@ -95,12 +60,14 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
     (async () => {
       try {
         const data = await api.getStudentLists();
-        if (mounted && Array.isArray(data) && data.length > 0) {
-          setLists(data);
+        if (mounted) {
+          // Se vier dados, usa eles. Se vier null/undefined, usa array vazio.
+          setLists(data || []);
         }
       } catch (error) {
-        // keep mocks if API not available
-        console.warn("Could not fetch student lists:", error);
+        console.error("Erro ao buscar listas:", error);
+        // Em caso de erro, garante que a lista fique vazia
+        if (mounted) setLists([]);
       }
     })();
     return () => {
