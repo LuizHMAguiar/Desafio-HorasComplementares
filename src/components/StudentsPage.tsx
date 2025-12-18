@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { StudentList, Student } from "../types";
+import { StudentList, Student, Activity } from "../types";
 import {
   Plus,
   Search,
@@ -39,8 +39,13 @@ interface StudentsPageProps {
   ) => void;
 }
 
+// Extender o tipo Student apenas para uso local com horas calculadas
+interface StudentWithCalculatedHours extends Student {
+  calculatedTotal?: number;
+}
+
 export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<StudentWithCalculatedHours[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [courseFilter, setCourseFilter] = useState("");
   const [classFilter, setClassFilter] = useState("");
@@ -61,6 +66,17 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
   const courses = [...new Set(students.map((s) => s.course))];
   const classes = [...new Set(students.map((s) => s.class))];
 
+  // Função auxiliar de cálculo de horas válidas
+  const calculateValidHours = (activities: Activity[]) => {
+    const typeMap: Record<string, number> = {};
+    activities.forEach((act) => {
+      typeMap[act.type] = (typeMap[act.type] || 0) + act.hours;
+    });
+    return Object.values(typeMap).reduce((acc, currentHours) => {
+      return acc + Math.min(currentHours, list.maxHoursPerType);
+    }, 0);
+  };
+
   const handleAddStudent = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -76,7 +92,8 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
       status: "em andamento",
     };
 
-    setStudents([...students, newStudent]);
+    // Adiciona com 0 horas calculadas inicialmente
+    setStudents([...students, { ...newStudent, calculatedTotal: 0 }]);
     // optimistically create on API
     try {
       api.createStudent(newStudent).catch(() => {
@@ -121,23 +138,46 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
     }
   };
 
+  // Efeito principal alterado para buscar e calcular horas
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const data = await api.getStudents({ listId: list.id });
-        if (mounted && Array.isArray(data) && data.length >= 0) {
-          setStudents(data as Student[]);
+        const studentsData = await api.getStudents({ listId: list.id });
+        
+        if (mounted && Array.isArray(studentsData)) {
+          // Para cada estudante, buscamos suas atividades para calcular o total real
+          const studentsWithHours = await Promise.all(
+            studentsData.map(async (student) => {
+              try {
+                const activities = await api.getActivities({ studentId: student.id });
+                const calculatedTotal = calculateValidHours(activities);
+                
+                // Determina status baseado no cálculo real
+                const status = calculatedTotal >= list.totalHours ? "concluído" : "em andamento";
+                
+                return { 
+                  ...student, 
+                  calculatedTotal,
+                  status: status as 'em andamento' | 'concluído' // Atualiza status visualmente
+                };
+              } catch (e) {
+                console.warn(`Erro ao calcular horas para aluno ${student.id}`, e);
+                return { ...student, calculatedTotal: student.totalHours || 0 };
+              }
+            })
+          );
+          
+          setStudents(studentsWithHours);
         }
       } catch (error) {
         console.warn("Could not fetch students:", error);
-        // fallback: keep any existing local data (was mock before)
       }
     })();
     return () => {
       mounted = false;
     };
-  }, [list.id]);
+  }, [list.id, list.maxHoursPerType, list.totalHours]); // Recalcula se as regras da lista mudarem
 
   const handleDownloadTemplate = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -146,7 +186,12 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
   };
 
   const handleExportReport = () => {
-    downloadStudentsCSV(students, list.title);
+    // Exporta usando os dados calculados
+    const dataToExport = students.map(s => ({
+        ...s,
+        totalHours: s.calculatedTotal ?? s.totalHours
+    }));
+    downloadStudentsCSV(dataToExport, list.title);
     toast.success("Relatório exportado com sucesso!");
   };
 
@@ -341,7 +386,7 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
                 <th className="text-left py-3 px-4 text-gray-600">Curso</th>
                 <th className="text-left py-3 px-4 text-gray-600">Turma</th>
                 <th className="text-left py-3 px-4 text-gray-600">
-                  Horas Cumpridas
+                  Horas Cumpridas (Válidas)
                 </th>
                 <th className="text-left py-3 px-4 text-gray-600">Status</th>
                 <th className="text-left py-3 px-4 text-gray-600">Ações</th>
@@ -367,7 +412,11 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
                     </td>
                     <td className="py-3 px-4 text-gray-600">{student.class}</td>
                     <td className="py-3 px-4 text-gray-600">
-                      {student.totalHours}h / {list.totalHours}h
+                      {/* Usando calculatedTotal em vez de totalHours bruto */}
+                      <span className="font-medium text-gray-900">
+                        {student.calculatedTotal ?? 0}h
+                      </span>{" "}
+                      / {list.totalHours}h
                     </td>
                     <td className="py-3 px-4">
                       <Badge
@@ -375,6 +424,11 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
                           student.status === "concluído"
                             ? "default"
                             : "secondary"
+                        }
+                        className={
+                            student.status === "concluído" 
+                            ? "bg-green-600 hover:bg-green-700" 
+                            : ""
                         }
                       >
                         {student.status}
