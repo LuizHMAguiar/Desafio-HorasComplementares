@@ -64,12 +64,10 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
       try {
         const data = await api.getStudentLists();
         if (mounted) {
-          // Se vier dados, usa eles. Se vier null/undefined, usa array vazio.
           setLists(data || []);
         }
       } catch (error) {
         console.error("Erro ao buscar listas:", error);
-        // Em caso de erro, garante que a lista fique vazia
         if (mounted) setLists([]);
       } finally {
         if (mounted) setLoading(false);

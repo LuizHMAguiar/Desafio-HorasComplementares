@@ -1,124 +1,105 @@
-import { Student, StudentList, Activity, User } from "../types";
+import { Activity, Student, StudentList, User } from "../types";
 
-const API_BASE =
-  (import.meta.env.VITE_API_BASE as string) ||
-  "https://horascomplementares-api.onrender.com";
+// URL FIXA da sua API no Render (Removi a variável de ambiente para garantir)
+const API_BASE = "https://horascomplementares-api.onrender.com";
 
-async function handleResponse(res: Response) {
+// Helper para tratar respostas
+const handleResponse = async (res: Response) => {
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || res.statusText);
+    throw new Error(text || `Erro API: ${res.status}`);
   }
-  return res.json().catch(() => null);
-}
+  return res.json();
+};
 
 export const api = {
-  // Users
+  // --- Usuários ---
   getUsers: async (): Promise<User[]> => {
     const res = await fetch(`${API_BASE}/users`);
     return handleResponse(res);
   },
-  getUserById: async (id: number): Promise<User> => {
-    const res = await fetch(`${API_BASE}/users/${id}`);
-    return handleResponse(res);
+
+  // --- Listas (Corrigido para /studentLists) ---
+  getStudentLists: async (): Promise<StudentList[]> => {
+    // Timeout estendido para 15s (o Render demora a acordar no plano free)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      // ATENÇÃO: Mudamos de '/lists' para '/studentLists' para bater com sua API
+      const res = await fetch(`${API_BASE}/studentLists`, { signal: controller.signal });
+      return await handleResponse(res);
+    } catch (error) {
+      console.error("API Error (Lists):", error);
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   },
-  createUser: async (data: Partial<User>): Promise<User> => {
-    const res = await fetch(`${API_BASE}/users`, {
+
+  createStudentList: async (list: Omit<StudentList, "id">): Promise<StudentList> => {
+    const res = await fetch(`${API_BASE}/studentLists`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(list),
     });
     return handleResponse(res);
   },
-  updateUser: async (id: number, data: Partial<User>): Promise<User> => {
-    const res = await fetch(`${API_BASE}/users/${id}`, {
+
+  updateStudentList: async (list: StudentList): Promise<StudentList> => {
+    const res = await fetch(`${API_BASE}/studentLists/${list.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(list),
     });
     return handleResponse(res);
   },
 
-  // Student Lists
-  getStudentLists: async (): Promise<StudentList[]> => {
-    const res = await fetch(`${API_BASE}/studentLists`);
-    return handleResponse(res);
-  },
-  getStudentListById: async (id: number): Promise<StudentList> => {
-    const res = await fetch(`${API_BASE}/studentLists/${id}`);
-    return handleResponse(res);
-  },
-
-  // Students
-  getStudents: async (params?: { listId?: number }): Promise<Student[]> => {
-    let url = `${API_BASE}/students`;
-    if (params?.listId) url += `?listId=${params.listId}`;
+  // --- Alunos ---
+  getStudents: async ({ listId }: { listId: number }): Promise<Student[]> => {
+    // A API json-server filtra usando query params (ex: ?listId=1)
+    const url = listId ? `${API_BASE}/students?listId=${listId}` : `${API_BASE}/students`;
     const res = await fetch(url);
     return handleResponse(res);
   },
-  getStudentById: async (id: number): Promise<Student> => {
-    const res = await fetch(`${API_BASE}/students/${id}`);
-    return handleResponse(res);
-  },
-  createStudent: async (data: Partial<Student>): Promise<Student> => {
+
+  createStudent: async (student: Student): Promise<Student> => {
     const res = await fetch(`${API_BASE}/students`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    return handleResponse(res);
-  },
-  updateStudent: async (
-    id: number,
-    data: Partial<Student>
-  ): Promise<Student> => {
-    const res = await fetch(`${API_BASE}/students/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(student),
     });
     return handleResponse(res);
   },
 
-  // Activities
-  getActivities: async (params?: {
-    studentId?: number;
-  }): Promise<Activity[]> => {
-    let url = `${API_BASE}/activities`;
-    if (params?.studentId) url += `?studentId=${params.studentId}`;
+  // --- Atividades ---
+  getActivities: async ({ studentId }: { studentId: number }): Promise<Activity[]> => {
+    const url = studentId ? `${API_BASE}/activities?studentId=${studentId}` : `${API_BASE}/activities`;
     const res = await fetch(url);
     return handleResponse(res);
   },
-  getActivityById: async (id: number): Promise<Activity> => {
-    const res = await fetch(`${API_BASE}/activities/${id}`);
-    return handleResponse(res);
-  },
-  createActivity: async (data: Partial<Activity>): Promise<Activity> => {
-    const { id, ...activityData } = data;
 
+  createActivity: async (activity: Omit<Activity, "id">): Promise<Activity> => {
     const res = await fetch(`${API_BASE}/activities`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(activityData),
+      body: JSON.stringify(activity),
     });
     return handleResponse(res);
   },
-  updateActivity: async (
-    id: number,
-    data: Partial<Activity>
-  ): Promise<Activity> => {
-    const res = await fetch(`${API_BASE}/activities/${id}`, {
+
+  updateActivity: async (id: number, activity: Partial<Activity>): Promise<void> => {
+    await fetch(`${API_BASE}/activities/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(activity),
     });
-    return handleResponse(res);
   },
+
   deleteActivity: async (id: number): Promise<void> => {
-    const res = await fetch(`${API_BASE}/activities/${id}`, {
+    await fetch(`${API_BASE}/activities/${id}`, {
       method: "DELETE",
     });
-    return handleResponse(res);
   },
 };
 

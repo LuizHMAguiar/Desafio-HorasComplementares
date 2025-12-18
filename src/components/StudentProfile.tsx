@@ -231,11 +231,6 @@ export function StudentProfile({
     toast.info("Arquivo removido");
   };
 
-  const handleDownloadDocument = (filename: string) => {
-    downloadDocument(filename);
-    toast.success(`Download de "${filename}" iniciado`);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">

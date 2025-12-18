@@ -167,6 +167,8 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
         }
       } catch (error) {
         console.warn("Could not fetch students:", error);
+      } finally {
+        if (mounted) setLoading(false);
       }
     })();
     return () => {
