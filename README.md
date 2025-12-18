@@ -1,120 +1,182 @@
-# Sistema de Gestão de Atividades Estudantis
+# 🎓 Sistema de Gestão de Atividades Estudantis
 
-Sistema completo para gestão de atividades complementares estudantis com controle de carga horária, upload de documentos e geração de relatórios.
-
-## 🚀 Instalação e Execução
-
-### Pré-requisitos
-- Node.js (versão 16 ou superior)
-- npm ou yarn
-
-### Instalação
-
-```bash
-# Instalar dependências
-npm install
-
-# Executar em modo de desenvolvimento
-npm run dev
-
-# Build para produção
-npm run build
-
-# Preview do build de produção
-npm run preview
-```
-
-O sistema estará disponível em `http://localhost:5173`
-
-## 👥 Credenciais de Acesso
-
-### Coordenador (acesso completo)
-- Email: coordenador@faculdade.edu.br
-- Senha: coord123
-
-### Monitor (acesso de visualização)
-- Email: monitor@faculdade.edu.br
-- Senha: monitor123
-
-## 📁 Estrutura do Projeto
-
-```
-/
-├── src/
-│   └── main.tsx              # Entry point da aplicação
-├── components/
-│   ├── Dashboard.tsx         # Dashboard principal
-│   ├── ListsPage.tsx         # Gestão de listas de atividades
-│   ├── StudentsPage.tsx      # Gestão de estudantes
-│   ├── StudentProfile.tsx    # Perfil e atividades do estudante
-│   ├── ReportPage.tsx        # Relatórios para impressão
-│   ├── LoginPage.tsx         # Página de autenticação
-│   ├── Navbar.tsx            # Barra de navegação
-│   └── ui/                   # Componentes de UI reutilizáveis
-├── utils/
-│   ├── exportUtils.ts        # Funções de export (CSV, PDF)
-│   └── dateUtils.ts          # Funções de manipulação de datas
-├── styles/
-│   └── globals.css           # Estilos globais
-└── App.tsx                   # Componente principal
-
-```
+Sistema completo para gerenciamento, validação e acompanhamento de horas complementares em instituições de ensino. O projeto permite que coordenadores criem turmas, monitores acompanhem o progresso e o sistema gere relatórios automáticos.
 
 ## ✨ Funcionalidades
 
-### Coordenador
-- ✅ Criar e editar listas de atividades
-- ✅ Adicionar e importar estudantes via CSV
-- ✅ Registrar atividades complementares
-- ✅ Upload de documentos comprobatórios
-- ✅ Gerar relatórios completos
-- ✅ Exportar dados em CSV
-- ✅ Imprimir relatórios em PDF
+### 🔐 Controle de Acesso
 
-### Monitor
-- ✅ Visualizar listas de atividades
-- ✅ Acompanhar progresso dos estudantes
-- ✅ Visualizar atividades registradas
-- ✅ Gerar relatórios
+* 
+**Coordenador:** Acesso total (Criar listas, cadastrar alunos, validar atividades, gerar relatórios).
 
-## 🎯 Características Técnicas
 
-- **Frontend**: React 18 + TypeScript
-- **Estilização**: Tailwind CSS
-- **Componentes UI**: shadcn/ui
-- **Ícones**: Lucide React
-- **Gráficos**: Recharts
-- **Notificações**: Sonner
-- **Build Tool**: Vite
+* 
+**Monitor:** Acesso de visualização (Acompanhar progresso e visualizar atividades).
 
-## 📊 Validações Implementadas
 
-- ✅ Datas não podem ser posteriores à data atual
-- ✅ Upload de arquivos com limite de 10MB
-- ✅ Tipos de arquivo permitidos: PDF, JPG, PNG, DOC, DOCX
-- ✅ CSV com validação de colunas obrigatórias
-- ✅ Formulários com validação de campos
 
-## 📤 Importação de Estudantes
+### 📊 Gestão Acadêmica
 
-O sistema aceita arquivos CSV com as seguintes colunas:
+* 
+**Dashboard Interativo:** Visão geral de turmas, alunos e horas totais.
 
-| Nome | CPF | Curso | Turma |
-|------|-----|-------|-------|
-| João da Silva | 123.456.789-00 | Engenharia Civil | 2024.1 |
-| Maria Santos | 234.567.890-11 | Engenharia Mecânica | 2024.1 |
 
-Baixe o modelo CSV através do botão "Baixar Modelo" na página de estudantes.
+* 
+**Listas de Atividades:** Configuração personalizada de carga horária total e limites por tipo de atividade.
 
-## 🎨 Design
 
-Interface limpa e profissional com:
-- Navegação intuitiva baseada em roles
-- Feedback visual com toasts
-- Barras de progresso
-- Filtros de busca
-- Dashboards diferenciados por perfil
+* 
+**Cadastro de Alunos:** Adição manual ou **Importação em massa via CSV**.
 
-## 📝 Licença
 
-Este projeto é propriedade privada.
+
+### 📝 Validação de Atividades
+
+* Registro detalhado com tipo, horas, data e upload de comprovantes.
+
+
+* 
+**Validação de Regras:** Impede datas futuras e verifica limites de horas.
+
+
+* Cálculo automático de progresso (barra de status).
+
+
+
+### 🖨️ Relatórios e Exportação
+
+* Geração de **Relatórios em PDF** prontos para impressão.
+
+
+* Exportação de dados de alunos para **CSV**.
+
+
+
+---
+
+## 🚀 Como Rodar o Projeto
+
+### Pré-requisitos
+
+Antes de começar, você precisará ter instalado em sua máquina:
+
+* [Node.js](https://nodejs.org/en/) (Versão 18 ou superior recomendada)
+* npm ou yarn
+
+### Passo a Passo
+
+1. **Clone o repositório**
+```bash
+git clone https://github.com/seu-usuario/gestao-atividades-estudantis.git
+cd gestao-atividades-estudantis
+
+```
+
+
+2. **Instale as dependências**
+```bash
+npm install
+# ou
+yarn install
+
+```
+
+
+3. **Configure as Variáveis de Ambiente (Opcional)**
+O sistema se conecta a uma API padrão, mas possui *mocks* (dados fictícios) locais caso a API falhe.
+Crie um arquivo `.env` na raiz se desejar apontar para um backend específico:
+```env
+VITE_API_BASE=http://localhost:8080
+
+```
+
+
+4. **Execute o projeto**
+```bash
+npm run dev
+
+```
+
+
+5. **Acesse no navegador**
+O servidor iniciará automaticamente na porta configurada (3000):
+* Acesse: `http://localhost:3000` 
+
+
+
+
+
+---
+
+## 👥 Credenciais de Acesso (Demo)
+
+Para testar as funcionalidades, utilize as contas de demonstração configuradas no sistema:
+
+| Perfil | Email | Senha | Permissões |
+| --- | --- | --- | --- |
+| **Coordenador** | `coordenador@escola.com` | `123456` | Leitura e Escrita |
+| **Monitor** | `monitor@escola.com` | `123456` | Apenas Leitura |
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+* 
+**Core:** React 18, TypeScript, Vite.
+
+
+* 
+**Estilização:** Tailwind CSS v4, PostCSS.
+
+
+* 
+**Componentes UI:** Shadcn/ui (Radix UI base).
+
+
+* 
+**Ícones:** Lucide React.
+
+
+* 
+**Gráficos:** Recharts.
+
+
+* 
+**PDF/Export:** jsPDF, html2canvas.
+
+
+* 
+**Formulários:** React Hook Form.
+
+
+* 
+**Notificações:** Sonner.
+
+
+
+---
+
+## 📂 Estrutura do Projeto
+
+```bash
+src/
+├── components/         # Componentes React
+│   ├── ui/             # Componentes base (Shadcn)
+│   ├── Dashboard.tsx   # Painel principal
+│   ├── StudentsPage.tsx# Listagem de alunos
+│   └── ...
+├── utils/              # Funções auxiliares
+│   ├── api.ts          # Camada de serviço API
+│   ├── exportUtils.ts  # Lógica de PDF/CSV
+│   └── dateUtils.ts    # Formatação de datas
+├── types.ts            # Definições de Tipos TS
+└── App.tsx             # Roteamento e Layout
+
+```
+
+---
+
+## 📄 Licença
+
+Este projeto é de uso privado para fins acadêmicos.
+Ícones por [Lucide](https://lucide.dev) e componentes por [shadcn/ui](https://ui.shadcn.com).
