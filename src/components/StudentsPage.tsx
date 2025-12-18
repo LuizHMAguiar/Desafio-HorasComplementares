@@ -24,6 +24,7 @@ import {
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
 import { api } from "../utils/api";
+import { calculateValidHours } from "../utils/calculations";
 import {
   downloadStudentsCSV,
   importStudentsFromCSV,
@@ -65,17 +66,6 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
 
   const courses = [...new Set(students.map((s) => s.course))];
   const classes = [...new Set(students.map((s) => s.class))];
-
-  // Função auxiliar de cálculo de horas válidas
-  const calculateValidHours = (activities: Activity[]) => {
-    const typeMap: Record<string, number> = {};
-    activities.forEach((act) => {
-      typeMap[act.type] = (typeMap[act.type] || 0) + act.hours;
-    });
-    return Object.values(typeMap).reduce((acc, currentHours) => {
-      return acc + Math.min(currentHours, list.maxHoursPerType);
-    }, 0);
-  };
 
   const handleAddStudent = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -151,7 +141,7 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
             studentsData.map(async (student) => {
               try {
                 const activities = await api.getActivities({ studentId: student.id });
-                const calculatedTotal = calculateValidHours(activities);
+                const calculatedTotal = calculateValidHours(activities, list.maxHoursPerType);
                 
                 // Determina status baseado no cálculo real
                 const status = calculatedTotal >= list.totalHours ? "concluído" : "em andamento";

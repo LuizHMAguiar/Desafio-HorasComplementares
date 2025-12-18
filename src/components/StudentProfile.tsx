@@ -33,6 +33,7 @@ import {
   isValidDate,
 } from "../utils/exportUtils";
 import api from "../utils/api";
+import { calculateValidHours, getHoursBreakdown } from "../utils/calculations";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,45 +63,6 @@ const activityTypes = [
   "Cursos",
 ];
 
-const mockActivities: Activity[] = [
-  {
-    id: 1,
-    studentId: 1,
-    type: "Eventos",
-    hours: 32,
-    date: "2024-03-15",
-    registeredBy: "Maria Silva",
-    document: "certificado.pdf",
-  },
-  {
-    id: 2,
-    studentId: 1,
-    type: "Organização",
-    hours: 10,
-    date: "2024-04-20",
-    registeredBy: "Maria Silva",
-    document: "declaracao.pdf",
-  },
-  {
-    id: 3,
-    studentId: 1,
-    type: "Pesquisa",
-    hours: 20,
-    date: "2024-05-10",
-    registeredBy: "João Santos",
-    document: "relatorio.pdf",
-  },
-  {
-    id: 4,
-    studentId: 1,
-    type: "Extensão",
-    hours: 16,
-    date: "2024-06-05",
-    registeredBy: "Maria Silva",
-    document: "comprovante.pdf",
-  },
-];
-
 export function StudentProfile({
   student,
   list,
@@ -117,15 +79,15 @@ export function StudentProfile({
           setActivities(data as Activity[]);
         }
       } catch (error) {
-        // fallback to mock activities for this student
-        setActivities(mockActivities.filter((a) => a.studentId === student.id));
         console.warn("Could not fetch activities:", error);
+        if (mounted) setActivities([]); // Define vazio em vez de mockActivities
       }
     })();
     return () => {
       mounted = false;
     };
   }, [student.id]);
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [deleteActivityId, setDeleteActivityId] = useState<number | null>(null);
@@ -137,47 +99,30 @@ export function StudentProfile({
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const totalHours = list.totalHours; // Use o total da lista real
+  // --- REFATORAÇÃO APLICADA AQUI ---
 
-  // --- LÓGICA DE CÁLCULO CORRIGIDA ---
-  // Calcula horas válidas respeitando o limite por tipo
-  const calculateValidTotal = () => {
-    const typeMap: Record<string, number> = {};
-    
-    // 1. Agrupa horas por tipo
-    activities.forEach((act) => {
-      typeMap[act.type] = (typeMap[act.type] || 0) + act.hours;
-    });
+  // 2. Calcula o total válido usando a função centralizada (Importada de utils/calculations)
+  // Certifique-se de ter importado: import { calculateValidHours } from "../utils/calculations";
+  const totalValidHours = calculateValidHours(activities, list.maxHoursPerType);
 
-    // 2. Soma aplicando o teto (Math.min)
-    return Object.values(typeMap).reduce((acc, currentHours) => {
-      return acc + Math.min(currentHours, list.maxHoursPerType);
-    }, 0);
-  };
-
-  const currentActivitiesSum = calculateValidTotal();
-  const displayedTotalHours = currentActivitiesSum;
-  // -------------------------------------
-
+  // 3. Barra de progresso usando a nova variável
   const progressPercentage = Math.min(
-    (displayedTotalHours / totalHours) * 100,
+    (totalValidHours / list.totalHours) * 100,
     100
   );
 
-  // Calcula horas por tipo para exibição nos cards
+  // 4. Gera os dados dos cards (Mantendo o map para exibir todos os tipos, mesmo os vazios)
   const hoursByType = activityTypes.map((type) => {
     const typeHours = activities
       .filter((a) => a.type === type)
       .reduce((sum, a) => sum + a.hours, 0);
     
-    // Indica se excedeu o limite visualmente (opcional, para UI)
-    const isCapped = typeHours > list.maxHoursPerType;
-    
+    // Aplica a lógica visual de limite
     return { 
       type, 
-      hours: typeHours,
-      validHours: Math.min(typeHours, list.maxHoursPerType), // Útil para mostrar "30h (20h válidas)"
-      isCapped
+      hours: typeHours, // Horas brutas
+      validHours: Math.min(typeHours, list.maxHoursPerType), // Horas válidas
+      isCapped: typeHours > list.maxHoursPerType // Flag para o alerta visual
     };
   });
 
@@ -311,10 +256,15 @@ export function StudentProfile({
 
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-gray-700">Progresso Total</span>
-            <span className="text-gray-900">
-              {displayedTotalHours}h / {totalHours}h (
-              {progressPercentage.toFixed(0)}%)
+            <span className="text-gray-700 font-medium">Progresso Total (Horas Válidas)</span>
+            <span className="text-gray-900 font-bold">
+              {totalValidHours}h{" "}
+              <span className="text-gray-500 font-normal">
+                / {list.totalHours}h
+              </span>
+              <span className="ml-2 text-sm text-gray-500">
+                ({progressPercentage.toFixed(0)}%)
+              </span>
             </span>
           </div>
           <Progress value={progressPercentage} className="h-3" />

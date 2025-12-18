@@ -5,6 +5,7 @@ import { Printer, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 import api from '../utils/api';
+import { calculateValidHours } from "../utils/calculations";
 import { downloadReportAsPDF } from '../utils/exportUtils';
 
 interface ReportPageProps {
@@ -31,15 +32,8 @@ export function ReportPage({ list }: ReportPageProps) {
           students.map(async (s) => {
             const activities = await api.getActivities({ studentId: s.id });
             
-            // --- CÁLCULO CORRIGIDO ---
-            const typeMap: Record<string, number> = {};
-            activities.forEach((act) => {
-              typeMap[act.type] = (typeMap[act.type] || 0) + (act.hours || 0);
-            });
-
-            const totalValid = Object.values(typeMap).reduce((acc, h) => {
-              return acc + Math.min(h, list.maxHoursPerType);
-            }, 0);
+            // --- CÁLCULO CORRIGIDO MAIS DIRETO ---
+            const totalValid = calculateValidHours(activities, list.maxHoursPerType);
             // -------------------------
 
             return {
