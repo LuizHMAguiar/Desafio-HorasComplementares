@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'; // 1. Adicionado hooks
-import { Card } from './ui/card';
-import { Button } from './ui/button';
-import { LoadingSpinner } from './ui/spinner';
-import { User, StudentList } from '../types';
 import { FileText, Plus, Users } from 'lucide-react';
+import { useEffect, useState } from 'react'; // 1. Adicionado hooks
+import { StudentList, User } from '../types';
 import api from '../utils/api'; // 2. Adicionado import da API
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import { LoadingSpinner } from './ui/spinner';
 
 interface DashboardProps {
   user: User;
@@ -28,7 +28,6 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
         }
       } catch (error) {
         console.error("Erro ao carregar listas:", error);
-        // Em caso de erro, mantém lista vazia (não usa mais mock)
         if (mounted) setLists([]); 
       } finally {
         if (mounted) setLoading(false);
@@ -42,10 +41,9 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
     };
   }, []);
 
-  // 5. Substituído 'mockLists' por 'lists' no cálculo
   const totalStudents = lists.reduce((sum, list) => sum + list.studentCount, 0);
 
-  // Enquanto carrega, pode mostrar algo simples ou retornar null
+  // Enquanto carrega, mostra spinner
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Carregando painel...<LoadingSpinner /></div>;
   }
@@ -64,7 +62,6 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
               <div className="w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center">
                 <FileText className="w-6 h-6 text-brand-600" />
               </div>
-              {/* Substituído mockLists.length */}
               <span className="text-gray-900">{lists.length}</span>
             </div>
             <h3 className="text-gray-600 mb-1">Listas Criadas</h3>
@@ -113,7 +110,6 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
                 </tr>
               </thead>
               <tbody>
-                {/* Substituído mockLists.map */}
                 {lists.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-gray-500">
@@ -161,7 +157,6 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
             <div className="w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center">
               <FileText className="w-6 h-6 text-brand-600" />
             </div>
-            {/* Substituído mockLists.length */}
             <span className="text-gray-900">{lists.length}</span>
           </div>
           <h3 className="text-gray-600 mb-1">Listas Disponíveis</h3>
@@ -184,7 +179,6 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
         <h2 className="text-gray-900 mb-6">Listas Acessíveis</h2>
         
         <div className="space-y-3">
-          {/* Substituído mockLists.map */}
           {lists.length === 0 ? (
              <p className="text-gray-500">Nenhuma lista disponível no momento.</p>
           ) : (

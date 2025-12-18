@@ -1,13 +1,13 @@
-import { Card } from './ui/card';
-import { Button } from './ui/button';
-import { LoadingSpinner } from './ui/spinner';
-import { StudentList, Student, Activity } from '../types';
-import { Printer, Download } from 'lucide-react';
-import { toast } from 'sonner';
+import { Download, Printer } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { Activity, Student, StudentList } from '../types';
 import api from '../utils/api';
 import { calculateValidHours } from "../utils/calculations";
 import { downloadReportAsPDF } from '../utils/exportUtils';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import { LoadingSpinner } from './ui/spinner';
 
 interface ReportPageProps {
   list: StudentList;

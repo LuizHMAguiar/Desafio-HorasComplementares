@@ -1,40 +1,24 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
-import { LoadingSpinner } from './ui/spinner';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
-import { Progress } from "./ui/progress";
-import { Student, Activity, User, StudentList } from "../types";
-import {
-  Plus,
-  FileText,
-  Edit,
-  Trash2,
+  AlertCircle,
   Download,
+  Edit,
+  FileText,
+  Plus,
+  Trash2,
   Upload,
   X,
-  AlertCircle,
 } from "lucide-react";
-import { Badge } from "./ui/badge";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Activity, Student, StudentList, User } from "../types";
+import api from "../utils/api";
+import { calculateValidHours } from "../utils/calculations";
 import {
   downloadDocument,
-  handleFileUpload,
   getMaxDate,
+  handleFileUpload,
   isValidDate,
 } from "../utils/exportUtils";
-import api from "../utils/api";
-import { calculateValidHours, getHoursBreakdown } from "../utils/calculations";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +29,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Progress } from "./ui/progress";
+import { LoadingSpinner } from './ui/spinner';
+import { Textarea } from "./ui/textarea";
 
 interface StudentProfileProps {
   student: Student;
@@ -82,7 +82,7 @@ export function StudentProfile({
         }
       } catch (error) {
         console.warn("Could not fetch activities:", error);
-        if (mounted) setActivities([]); // Define vazio em vez de mockActivities
+        if (mounted) setActivities([]);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -528,9 +528,7 @@ export function StudentProfile({
                           variant="ghost"
                           size="sm"
                           className="gap-2"
-                          onClick={() =>
-                            handleDownloadDocument(activity.document!)
-                          }
+                          onClick={() => downloadDocument(activity.document!, `comprovante-${activity.id}.pdf`)}
                         >
                           <Download className="w-4 h-4" />
                           {activity.document}

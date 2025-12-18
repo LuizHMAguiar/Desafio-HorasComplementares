@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
-import { Card } from "./ui/card";
+import { Edit, FolderOpen, Plus, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { StudentList } from "../types";
+import { api } from "../utils/api";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { LoadingSpinner } from './ui/spinner';
+import { Card } from "./ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +13,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { StudentList } from "../types";
-import { Plus, Search, Edit, FolderOpen } from "lucide-react";
-import { toast } from "sonner";
-import { api } from "../utils/api";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { LoadingSpinner } from './ui/spinner';
 
 interface ListsPageProps {
   onNavigate: (page: "students", list: StudentList) => void;

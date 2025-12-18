@@ -83,7 +83,8 @@ yarn install
 
 
 3. **Configure as Variáveis de Ambiente (Opcional)**
-O sistema se conecta a uma API padrão, mas possui *mocks* (dados fictícios) locais caso a API falhe.
+O sistema se conecta a uma API padrão.
+
 Crie um arquivo `.env` na raiz se desejar apontar para um backend específico:
 ```env
 VITE_API_BASE=http://localhost:8080

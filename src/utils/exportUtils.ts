@@ -234,7 +234,6 @@ export async function downloadPDF(elementId: string, filename: string) {
  */
 export async function downloadReportAsPDF(elementId: string | undefined, filename?: string) {
   try {
-    console.log('downloadReportAsPDF: iniciando para', elementId, filename);
     const element = elementId ? document.getElementById(elementId) : document.body;
     if (!element) throw new Error('Elemento não encontrado para gerar PDF');
 
@@ -443,48 +442,31 @@ export async function downloadReportAsPDF(elementId: string | undefined, filenam
 }
 
 /**
- * Download activity document
+ * Abre o documento real em uma nova aba para download/visualização
+ * @param fileUrl URL pública ou caminho do arquivo
+ * @param fileName Nome sugerido para salvar o arquivo
  */
-export function downloadDocument(filename: string, content?: Blob) {
+export function downloadDocument(fileUrl: string, fileName: string) {
   try {
-    if (content) {
-      // If actual content is provided, download it
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(content);
-      
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Clean up URL
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-    } else {
-      // Simulate download for demo purposes
-      // In a real application, this would fetch the file from the server
-      const mockContent = `Este é um documento comprobatório: ${filename}\n\nEm um sistema real, este arquivo seria baixado do servidor.`;
-      const blob = new Blob([mockContent], { type: 'text/plain' });
-      
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Clean up URL
-      setTimeout(() => URL.revokeObjectURL(url), 100);
+    if (!fileUrl) {
+      console.error("URL do arquivo não fornecida");
+      return;
     }
+
+    // Cria um link temporário apontando para a URL real do arquivo
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    
+    // Configura atributos para forçar download ou abrir em nova aba
+    link.setAttribute('download', fileName);
+    link.setAttribute('target', '_blank');
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   } catch (error) {
     console.error('Erro ao baixar documento:', error);
-    throw new Error('Erro ao baixar documento');
   }
 }
 

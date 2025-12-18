@@ -1,9 +1,25 @@
-import { useState, useRef, useEffect } from "react";
-import { Card } from "./ui/card";
+import {
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Plus,
+  Search,
+  Upload,
+  User,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { Student, StudentList } from "../types";
+import { api } from "../utils/api";
+import { calculateValidHours } from "../utils/calculations";
+import {
+  downloadCSVTemplate,
+  downloadStudentsCSV,
+  importStudentsFromCSV,
+} from "../utils/exportUtils";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { LoadingSpinner } from './ui/spinner';
+import { Card } from "./ui/card";
 import {
   Dialog,
   DialogContent,
@@ -12,25 +28,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { StudentList, Student, Activity } from "../types";
-import {
-  Plus,
-  Search,
-  Upload,
-  Download,
-  User,
-  FileSpreadsheet,
-  FileText,
-} from "lucide-react";
-import { Badge } from "./ui/badge";
-import { toast } from "sonner";
-import { api } from "../utils/api";
-import { calculateValidHours } from "../utils/calculations";
-import {
-  downloadStudentsCSV,
-  importStudentsFromCSV,
-  downloadCSVTemplate,
-} from "../utils/exportUtils";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { LoadingSpinner } from './ui/spinner';
 
 interface StudentsPageProps {
   list: StudentList;

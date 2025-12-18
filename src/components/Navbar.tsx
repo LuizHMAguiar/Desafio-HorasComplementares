@@ -1,6 +1,6 @@
-import { Button } from "./ui/button";
 import { Home, List, LogOut } from "lucide-react";
-import { User, StudentList } from "../types"; // Ajuste os imports conforme seu projeto
+import { User } from "../types";
+import { Button } from "./ui/button";
 
 interface NavbarProps {
   user: User;

@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { LoginPage } from './components/LoginPage';
 import { Dashboard } from './components/Dashboard';
 import { ListsPage } from './components/ListsPage';
-import { StudentsPage } from './components/StudentsPage';
-import { StudentProfile } from './components/StudentProfile';
-import { ReportPage } from './components/ReportPage';
+import { LoginPage } from './components/LoginPage';
 import { Navbar } from './components/Navbar';
+import { ReportPage } from './components/ReportPage';
+import { StudentProfile } from './components/StudentProfile';
+import { StudentsPage } from './components/StudentsPage';
 import { Toaster } from './components/ui/sonner';
-import { User, StudentList, Student } from './types';
+import { Student, StudentList, User } from './types';
 
 type Page = 'login' | 'dashboard' | 'lists' | 'students' | 'student-profile' | 'report';
 
