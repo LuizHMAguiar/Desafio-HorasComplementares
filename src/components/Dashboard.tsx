@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'; // 1. Adicionado hooks
 import { Card } from './ui/card';
 import { Button } from './ui/button';
+import { LoadingSpinner } from './ui/spinner';
 import { User, StudentList } from '../types';
 import { FileText, Plus, Users } from 'lucide-react';
 import api from '../utils/api'; // 2. Adicionado import da API
@@ -46,7 +47,7 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
 
   // Enquanto carrega, pode mostrar algo simples ou retornar null
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Carregando painel...</div>;
+    return <div className="p-8 text-center text-gray-500">Carregando painel...<LoadingSpinner /></div>;
   }
 
   if (user.role === 'coordenador') {

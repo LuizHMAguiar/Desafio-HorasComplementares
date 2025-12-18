@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
+import { LoadingSpinner } from './ui/spinner';
 import {
   Dialog,
   DialogContent,
@@ -70,6 +71,7 @@ export function StudentProfile({
   onNavigate,
 }: StudentProfileProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -81,6 +83,8 @@ export function StudentProfile({
       } catch (error) {
         console.warn("Could not fetch activities:", error);
         if (mounted) setActivities([]); // Define vazio em vez de mockActivities
+      } finally {
+        if (mounted) setLoading(false);
       }
     })();
     return () => {
@@ -231,6 +235,14 @@ export function StudentProfile({
     downloadDocument(filename);
     toast.success(`Download de "${filename}" iniciado`);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -3,6 +3,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { LoadingSpinner } from './ui/spinner';
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,8 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
     setEditingList(null);
   };
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -68,12 +71,22 @@ export function ListsPage({ onNavigate }: ListsPageProps) {
         console.error("Erro ao buscar listas:", error);
         // Em caso de erro, garante que a lista fique vazia
         if (mounted) setLists([]);
+      } finally {
+        if (mounted) setLoading(false);
       }
     })();
     return () => {
       mounted = false;
     };
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -3,6 +3,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { LoadingSpinner } from './ui/spinner';
 import {
   Dialog,
   DialogContent,
@@ -125,8 +126,12 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
       toast.success(`${count} estudante(s) importado(s) com sucesso!`);
     } catch (error) {
       toast.error("Erro ao importar arquivo CSV");
+    } finally {
+      setLoading(false);
     }
   };
+
+  const [loading, setLoading] = useState(true);
 
   // Efeito principal alterado para buscar e calcular horas
   useEffect(() => {
@@ -194,6 +199,14 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
       .replace(/(\d{3})(\d{1,2})/, '$1-$2') // Coloca traço após o 9º digito
       .replace(/(-\d{2})\d+?$/, '$1'); // Impede digitar mais que o necessário
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

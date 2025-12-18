@@ -1,5 +1,6 @@
 import { Card } from './ui/card';
 import { Button } from './ui/button';
+import { LoadingSpinner } from './ui/spinner';
 import { StudentList, Student, Activity } from '../types';
 import { Printer, Download } from 'lucide-react';
 import { toast } from 'sonner';
@@ -83,6 +84,14 @@ export function ReportPage({ list }: ReportPageProps) {
     month: 'long',
     year: 'numeric'
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
 
