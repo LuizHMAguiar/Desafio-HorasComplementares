@@ -1,22 +1,53 @@
+import { useEffect, useState } from 'react'; // 1. Adicionado hooks
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { User, StudentList } from '../types';
-import { FileText, Plus, Users,} from 'lucide-react';
+import { FileText, Plus, Users } from 'lucide-react';
+import api from '../utils/api'; // 2. Adicionado import da API
 
 interface DashboardProps {
   user: User;
   onNavigate: (page: 'lists' | 'students', list?: StudentList) => void;
 }
 
-// Mock data
-const mockLists: StudentList[] = [
-  { id: 1, title: 'Turma 2024.1 - Engenharia', totalHours: 150, maxHoursPerType: 50, studentCount: 45, createdAt: '2024-01-15' },
-  { id: 2, title: 'Turma 2024.1 - Administração', totalHours: 150, maxHoursPerType: 50, studentCount: 38, createdAt: '2024-01-20' },
-  { id: 3, title: 'Turma 2023.2 - Direito', totalHours: 150, maxHoursPerType: 50, studentCount: 52, createdAt: '2023-08-10' },
-];
-
 export function Dashboard({ user, onNavigate }: DashboardProps) {
-  const totalStudents = mockLists.reduce((sum, list) => sum + list.studentCount, 0);
+  // 3. Estado para armazenar as listas reais da API
+  const [lists, setLists] = useState<StudentList[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 4. Busca os dados ao carregar a página
+  useEffect(() => {
+    let mounted = true;
+
+    const loadData = async () => {
+      try {
+        const data = await api.getStudentLists();
+        if (mounted) {
+          setLists(data || []);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar listas:", error);
+        // Em caso de erro, mantém lista vazia (não usa mais mock)
+        if (mounted) setLists([]); 
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // 5. Substituído 'mockLists' por 'lists' no cálculo
+  const totalStudents = lists.reduce((sum, list) => sum + list.studentCount, 0);
+
+  // Enquanto carrega, pode mostrar algo simples ou retornar null
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500">Carregando painel...</div>;
+  }
 
   if (user.role === 'coordenador') {
     return (
@@ -32,7 +63,8 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <FileText className="w-6 h-6 text-blue-600" />
               </div>
-              <span className="text-gray-900">{mockLists.length}</span>
+              {/* Substituído mockLists.length */}
+              <span className="text-gray-900">{lists.length}</span>
             </div>
             <h3 className="text-gray-600 mb-1">Listas Criadas</h3>
             <p className="text-sm text-gray-500">Gerenciar listas de atividades</p>
@@ -80,23 +112,32 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
                 </tr>
               </thead>
               <tbody>
-                {mockLists.map((list) => (
-                  <tr key={list.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-gray-900">{list.title}</td>
-                    <td className="py-3 px-4 text-gray-600">{list.totalHours}h</td>
-                    <td className="py-3 px-4 text-gray-600">{list.maxHoursPerType}h</td>
-                    <td className="py-3 px-4 text-gray-600">{list.studentCount}</td>
-                    <td className="py-3 px-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onNavigate('students', list)}
-                      >
-                        Abrir
-                      </Button>
+                {/* Substituído mockLists.map */}
+                {lists.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-gray-500">
+                      Nenhuma lista encontrada.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  lists.map((list) => (
+                    <tr key={list.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-gray-900">{list.title}</td>
+                      <td className="py-3 px-4 text-gray-600">{list.totalHours}h</td>
+                      <td className="py-3 px-4 text-gray-600">{list.maxHoursPerType}h</td>
+                      <td className="py-3 px-4 text-gray-600">{list.studentCount}</td>
+                      <td className="py-3 px-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onNavigate('students', list)}
+                        >
+                          Abrir
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -119,7 +160,8 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <FileText className="w-6 h-6 text-blue-600" />
             </div>
-            <span className="text-gray-900">{mockLists.length}</span>
+            {/* Substituído mockLists.length */}
+            <span className="text-gray-900">{lists.length}</span>
           </div>
           <h3 className="text-gray-600 mb-1">Listas Disponíveis</h3>
           <p className="text-sm text-gray-500">Para acompanhamento</p>
@@ -141,21 +183,26 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
         <h2 className="text-gray-900 mb-6">Listas Acessíveis</h2>
         
         <div className="space-y-3">
-          {mockLists.map((list) => (
-            <Card key={list.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('students', list)}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-gray-900 mb-1">{list.title}</h3>
-                  <p className="text-sm text-gray-600">
-                    {list.studentCount} estudantes • {list.totalHours}h total
-                  </p>
+          {/* Substituído mockLists.map */}
+          {lists.length === 0 ? (
+             <p className="text-gray-500">Nenhuma lista disponível no momento.</p>
+          ) : (
+            lists.map((list) => (
+              <Card key={list.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('students', list)}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-gray-900 mb-1">{list.title}</h3>
+                    <p className="text-sm text-gray-600">
+                      {list.studentCount} estudantes • {list.totalHours}h total
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Acessar
+                  </Button>
                 </div>
-                <Button variant="outline" size="sm">
-                  Acessar
-                </Button>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))
+          )}
         </div>
       </Card>
     </div>
