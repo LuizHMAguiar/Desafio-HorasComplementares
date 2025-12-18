@@ -439,16 +439,8 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
                     </td>
                     <td className="py-3 px-4">
                       <Badge
-                        variant={
-                          student.status === "concluído"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className={
-                            student.status === "concluído" 
-                            ? "bg-green-600 hover:bg-green-700" 
-                            : ""
-                        }
+                        variant={student.status === "concluído" ? "default" : "secondary"}
+                        className="capitalize"
                       >
                         {student.status}
                       </Badge>
