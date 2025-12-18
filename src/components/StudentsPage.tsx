@@ -287,7 +287,7 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
               <div className="text-sm text-gray-600">
                 <a
                   href="#"
-                  className="text-indigo-600 hover:underline"
+                  className="text-brand-600 hover:underline"
                   onClick={handleDownloadTemplate}
                 >
                   Baixar modelo CSV

@@ -7,6 +7,20 @@ export default {
   theme: {
     extend: {
       colors: {
+        brand: {
+          50: '#f3f6f3',
+          100: '#e4e9e2',
+          200: '#c9d3c7',
+          300: '#a2b4a1',
+          400: '#80977f',
+          500: '#577257',
+          600: '#425942',
+          700: '#354736',
+          800: '#2b3a2c',
+          900: '#243025',
+          950: '#141a15',
+        },
+
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

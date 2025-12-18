@@ -60,8 +60,8 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="p-6 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onNavigate('lists')}>
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6 text-brand-600" />
               </div>
               {/* Substituído mockLists.length */}
               <span className="text-gray-900">{lists.length}</span>
@@ -70,14 +70,14 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
             <p className="text-sm text-gray-500">Gerenciar listas de atividades</p>
           </Card>
 
-          <Card className="p-6 cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-br from-indigo-500 to-indigo-600 text-white" onClick={() => onNavigate('lists')}>
+          <Card className="p-6 cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-br from-brand-500 to-brand-600 text-white" onClick={() => onNavigate('lists')}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
                 <Plus className="w-6 h-6 text-white" />
               </div>
             </div>
             <h3 className="mb-1">Adicionar Lista</h3>
-            <p className="text-sm text-indigo-100">Criar nova lista de atividades</p>
+            <p className="text-sm text-brand-100">Criar nova lista de atividades</p>
           </Card>
 
           <Card className="p-6">
@@ -157,8 +157,8 @@ export function Dashboard({ user, onNavigate }: DashboardProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FileText className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-brand-100 rounded-lg flex items-center justify-center">
+              <FileText className="w-6 h-6 text-brand-600" />
             </div>
             {/* Substituído mockLists.length */}
             <span className="text-gray-900">{lists.length}</span>
