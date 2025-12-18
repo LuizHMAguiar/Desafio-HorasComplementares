@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { Progress } from "./ui/progress";
-import { Student, Activity, User } from "../types";
+import { Student, Activity, User, StudentList } from "../types";
 import {
   Plus,
   FileText,
@@ -22,6 +22,7 @@ import {
   Download,
   Upload,
   X,
+  AlertCircle,
 } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
@@ -45,6 +46,7 @@ import {
 
 interface StudentProfileProps {
   student: Student;
+  list: StudentList;
   user: User;
   onNavigate: (page: "students") => void;
 }
@@ -101,6 +103,7 @@ const mockActivities: Activity[] = [
 
 export function StudentProfile({
   student,
+  list,
   user,
   onNavigate,
 }: StudentProfileProps) {
@@ -134,22 +137,48 @@ export function StudentProfile({
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const totalHours = 150;
+  const totalHours = list.totalHours; // Use o total da lista real
 
-  // Calculate total hours from current activities
-  const currentActivitiesSum = activities.reduce((sum, a) => sum + a.hours, 0);
+  // --- LÓGICA DE CÁLCULO CORRIGIDA ---
+  // Calcula horas válidas respeitando o limite por tipo
+  const calculateValidTotal = () => {
+    const typeMap: Record<string, number> = {};
+    
+    // 1. Agrupa horas por tipo
+    activities.forEach((act) => {
+      typeMap[act.type] = (typeMap[act.type] || 0) + act.hours;
+    });
+
+    // 2. Soma aplicando o teto (Math.min)
+    return Object.values(typeMap).reduce((acc, currentHours) => {
+      return acc + Math.min(currentHours, list.maxHoursPerType);
+    }, 0);
+  };
+
+  const currentActivitiesSum = calculateValidTotal();
   const displayedTotalHours = currentActivitiesSum;
+  // -------------------------------------
+
   const progressPercentage = Math.min(
     (displayedTotalHours / totalHours) * 100,
     100
   );
 
-  // Calculate hours by type
+  // Calcula horas por tipo para exibição nos cards
   const hoursByType = activityTypes.map((type) => {
     const typeHours = activities
       .filter((a) => a.type === type)
       .reduce((sum, a) => sum + a.hours, 0);
-    return { type, hours: typeHours };
+    
+    // Indica se excedeu o limite visualmente (opcional, para UI)
+    const isCapped = typeHours > list.maxHoursPerType;
+    
+    return { 
+      type, 
+      hours: typeHours,
+      validHours: Math.min(typeHours, list.maxHoursPerType), // Útil para mostrar "30h (20h válidas)"
+      isCapped
+    };
   });
 
   const filteredActivities = activities.filter((activity) => {
@@ -295,9 +324,41 @@ export function StudentProfile({
           {hoursByType
             .filter((item) => item.hours > 0)
             .map((item) => (
-              <Card key={item.type} className="p-4 bg-gray-50">
-                <div className="text-sm text-gray-600 mb-1">{item.type}</div>
-                <div className="text-gray-900">{item.hours}h</div>
+              <Card 
+                key={item.type} 
+                // Muda a cor do card se tiver atingido o teto (isCapped)
+                className={`p-4 border ${item.isCapped ? 'border-amber-200 bg-amber-50' : 'bg-gray-50'}`}
+              >
+                <div className="flex justify-between items-start mb-1">
+                    <div className="text-sm text-gray-600 font-medium truncate" title={item.type}>
+                        {item.type}
+                    </div>
+                    {/* Mostra ícone de alerta se exceder */}
+                    {item.isCapped && (
+                        <AlertCircle className="w-4 h-4 text-amber-500" />
+                    )}
+                </div>
+                
+                <div className="flex items-baseline gap-2">
+                    {/* Mostra as horas VÁLIDAS grande */}
+                    <span className="text-2xl font-bold text-gray-900">
+                        {item.validHours}h
+                    </span>
+                    
+                    {/* Se exceder, mostra o total real riscado e o limite */}
+                    {item.isCapped && (
+                        <div className="text-xs text-red-600 font-medium flex flex-col leading-tight">
+                            <span className="line-through opacity-70">{item.hours}h</span>
+                            <span>(Max {list.maxHoursPerType}h)</span>
+                        </div>
+                    )}
+                </div>
+                
+                {!item.isCapped && (
+                    <div className="text-xs text-gray-400 mt-1">
+                        Válidas
+                    </div>
+                )}
               </Card>
             ))}
         </div>

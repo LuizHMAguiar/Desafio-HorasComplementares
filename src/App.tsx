@@ -62,7 +62,7 @@ export default function App() {
         )}
         
         {currentPage === 'student-profile' && selectedStudent && (
-          <StudentProfile student={selectedStudent} user={currentUser} onNavigate={navigateTo} />
+          <StudentProfile student={selectedStudent} list={selectedList!} user={currentUser} onNavigate={navigateTo} />
         )}
         
         {currentPage === 'report' && selectedList && (

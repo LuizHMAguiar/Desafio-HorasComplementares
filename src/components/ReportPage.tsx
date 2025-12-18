@@ -30,7 +30,18 @@ export function ReportPage({ list }: ReportPageProps) {
         const items = await Promise.all(
           students.map(async (s) => {
             const activities = await api.getActivities({ studentId: s.id });
-            const total = activities.reduce((acc, a) => acc + (a.hours || 0), 0);
+            
+            // --- CÁLCULO CORRIGIDO ---
+            const typeMap: Record<string, number> = {};
+            activities.forEach((act) => {
+              typeMap[act.type] = (typeMap[act.type] || 0) + (act.hours || 0);
+            });
+
+            const totalValid = Object.values(typeMap).reduce((acc, h) => {
+              return acc + Math.min(h, list.maxHoursPerType);
+            }, 0);
+            // -------------------------
+
             return {
               student: {
                 id: s.id,
@@ -38,10 +49,10 @@ export function ReportPage({ list }: ReportPageProps) {
                 cpf: s.cpf,
                 course: s.course,
                 class: s.class,
-                totalHours: s.totalHours ?? total,
+                totalHours: totalValid, // Usa o valor calculado corrigido
               },
               activities,
-              totalHours: s.totalHours ?? total,
+              totalHours: totalValid,
             } as ReportItem;
           })
         );
