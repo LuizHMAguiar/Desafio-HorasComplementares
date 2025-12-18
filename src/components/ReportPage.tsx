@@ -114,7 +114,8 @@ export function ReportPage({ list }: ReportPageProps) {
             <img 
               src="/logo.png" 
               alt="Logo da Instituição" 
-              className="h-12 w-auto object-contain" 
+              style={{ height: '50px', width: 'auto' }} 
+              className="object-contain" 
             />
           </div>
           <h1 className="text-gray-900 mb-2">Relatório de Atividades Complementares</h1>
