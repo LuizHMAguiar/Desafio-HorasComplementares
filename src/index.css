@@ -65,12 +65,16 @@
     --color-red-700: oklch(.505 .213 27.518);
     --color-green-100: oklch(.962 .044 156.743);
     --color-green-600: oklch(.627 .194 149.214);
-    --color-brand-50: oklch(.97 .014 254.604);
-    --color-brand-100: oklch(.932 .032 255.585);
-    --color-brand-600: oklch(.546 .245 262.881);
-    --color-brand-100: oklch(.93 .034 272.788);
-    --color-brand-500: oklch(.585 .233 277.117);
-    --color-brand-600: oklch(.511 .262 276.966);
+    --color-brand-50: #f3f6f3;
+    --color-brand-100: #e4e9e2;
+    --color-brand-200: #c9d3c7;
+    --color-brand-300: #a2b4a1;
+    --color-brand-400: #80977f;
+    --color-brand-500: #577257;
+    --color-brand-600: #425942; /* <--- Seu Verde Principal */
+    --color-brand-700: #354736;
+    --color-brand-800: #2b3a2c;
+    --color-brand-900: #243025;
     --color-gray-50: oklch(.985 .002 247.839);
     --color-gray-100: oklch(.967 .003 264.542);
     --color-gray-200: oklch(.928 .006 264.531);
@@ -82,6 +86,9 @@
     --color-gray-900: oklch(.21 .034 264.665);
     --color-black: #000;
     --color-white: #fff;
+    --color-primary: #425942; 
+    --color-primary-foreground: #ffffff;
+    --color-ring: #425942;
     --spacing: .25rem;
     --container-xs: 20rem;
     --container-md: 28rem;
