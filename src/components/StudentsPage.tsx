@@ -185,6 +185,16 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
     toast.success("Relatório exportado com sucesso!");
   };
 
+  // Função simples de máscara de CPF
+  const formatCPF = (value: string) => {
+    return value
+      .replace(/\D/g, '') // Remove tudo que não é dígito
+      .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto após o 3º digito
+      .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto após o 6º digito
+      .replace(/(\d{3})(\d{1,2})/, '$1-$2') // Coloca traço após o 9º digito
+      .replace(/(-\d{2})\d+?$/, '$1'); // Impede digitar mais que o necessário
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
@@ -224,6 +234,10 @@ export function StudentsPage({ list, onNavigate }: StudentsPageProps) {
                   name="cpf"
                   placeholder="000.000.000-00"
                   required
+                  maxLength={14} // Limita o tamanho
+                  onChange={(e) => {
+                    e.target.value = formatCPF(e.target.value);
+                  }}
                 />
               </div>
               <div className="space-y-2">
